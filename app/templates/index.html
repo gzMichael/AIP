@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}定投收益回测{% endblock %}
+{% block navbar %}
+<div class="navbar navbar-inverse" role="navigation">
+	<div class="container">
+		<div class="span5 well pricehover">
+			<ul class="nav nav-pills">
+				<li class="active"><a href="#">定投回测</a></li>
+				<li><a href="{{url_for('about', _external=True)}}">About</a></li>
+			</ul>
+		</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_content %}
+	<div class="page-header">
+
+        {{ wtf.quick_form(form) }}
+
+        <br />
+        {% for message in get_flashed_messages(with_categories=True) %}
+            <div class="alert alert-{{ message[0] }}">
+                {{ message[1] }}
+            </div>
+        {% endfor %}
+        <br />
+        提示：输入证券代码进行回测。<p>
+        {% if records %}
+ 
+        <table class="table table-striped">
+            <thead>
+                <tr align="center" valign="middle">
+                    <td align="center" valign="middle">日期</td>
+                    <td align="center" valign="middle">开盘价</td>
+                    <td align="center" valign="middle">收盘价</td>
+                    <td align="center" valign="middle">最高价</td>
+                    <td align="center" valign="middle">最低价</td>
+                </tr>
+            </thead>            
+            <tbody>
+            {% for record in records %}
+                <tr align="center" valign="middle">
+                    <td align="center" valign="middle">{{ record['date'] }}</td>
+                    <td align="center" valign="middle">{{ record['open'] }}</td>
+                    <td align="center" valign="middle">{{ record['close'] }}</td>
+                    <td align="center" valign="middle">{{ record['high'] }}</td>
+                    <td align="center" valign="middle">{{ record['low'] }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>  
+        {% endif %}
+    </div>
+    
+{% endblock %}

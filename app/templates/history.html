@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}天气在线查询{% endblock %}
+{% block navbar %}
+<div class="navbar navbar-inverse" role="navigation">
+	<div class="container">
+		<div class="span5 well pricehover">
+			<ul class="nav nav-pills">
+				<li><a href="{{url_for('index', _external=True)}}">天气查询</a></li>
+				<li class="active"><a href="#">历史查询</a></li>
+				<li><a href="{{url_for('about', _external=True)}}">About</a></li>
+			</ul>
+		</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_content %}
+{% for message in get_flashed_messages(with_categories=True) %}
+    <div class="alert alert-{{ message[0] }}">
+        {{ message[1] }}
+    </div>
+{% endfor %}
+{% if history %}
+<table class="table table-striped">
+            <thead>
+            <tr>
+                    <th>#</th>
+                    <th>时间</th>
+                    <th>IP</th>
+                    <th>所在地</th>
+                    <th>API</th>
+                    <th>查询城市</th>
+                    <th>天气情况</th>
+                    <th>天气图标</th>
+                    <th>最低温度</th>
+                    <th>最高温度</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{record['id']}}</td>
+                    <td>{{record['time']}}</td>
+                    <td>{{record['ip']}}</td>
+                    <td>{{record['location']}}</td>
+                    <td>{{record['api']}}</td>
+                    <td>{{record['cityname']}}</td>
+                    <td>{{record['weather']}}</td>
+                    <td><img src="../static/{{record['weathercode']}}.png" height="30" width="30"></td>
+                    <td>{{record['tempmin']}} {{record['tempunit']}}</td>
+                    <td>{{record['tempmax']}} {{record['tempunit']}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>  
+        
+        <div class="pagination"> 
+            {% if pagination.has_prev %} 
+                <li><a href="/history/{{ pagination.prev_num }}">上一页</a></li>
+            {% endif %} 
+                <li><a href="">{{ pagination.page }} / {{ pagination.pages }}</a></li>
+            {% if pagination.has_next %} 
+                <li><a href="/history/{{ pagination.next_num }}">下一页</a></li>
+            {% endif %} 
+                </div> 
+            </div> 
+        </div>
+
+{% endif %}
+{% endblock %}
