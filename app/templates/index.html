@@ -27,6 +27,10 @@
             </div>
         {% endfor %}
         <br />
+        
+        {% if user %}
+        g.user={{ user }}<br>
+        
         提示：输入证券代码进行回测。<p>
         {% if records %}
  

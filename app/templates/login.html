@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}资金定投回测{% endblock %}
+{% block navbar %}
+<div class="navbar navbar-inverse" role="navigation">
+	<div class="container">
+		<div class="span5 well pricehover">
+			<ul class="nav nav-pills">
+				<li><a href="{{url_for('index', _external=True)}}">定投回测</a></li>
+				<li><a href="{{url_for('history', _external=True)}}">回测记录</a></li>
+				<li class="active"><a href="#">About</a></li>
+			</ul>
+		</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_content %}
+
+<div class='login'>
+   <h1>你好，欢迎使用定投回测。</h1><br />
+</div>
+
+{{ wtf.quick_form(form) }}
+<br />
+        {% for message in get_flashed_messages(with_categories=True) %}
+            <div class="alert alert-{{ message[0] }}">
+                {{ message[1] }}
+            </div>
+        {% endfor %}
+        <br />
+<br>
+<p>如果你还未注册，可以先点击<a href="{{ url_for('register') }}">这里</a>进入注册页面</p>
+
+{% endblock %}
