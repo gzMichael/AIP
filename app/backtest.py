@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import os
 import tushare as ts
 import sqlite3
-import datetime
+import time, datetime
 from math import floor
 
 MIN_BUY_AMOUNT = 100
@@ -18,7 +17,7 @@ def backtest(conn, stockcode, start, end, period, fund):
         String: The period of the backtest:Monthly or Yearly.
         String: The amount of fund of investment.
     Return:
-        List: btrecords: [list_date, list_asset, list_cash, 
+        List: btrecords: [list_date, list_datetime, list_asset, list_cash, 
                             list_holding, list_price]
         Int: Return code: 0 - normal
                           1 - start/end date error
@@ -27,6 +26,8 @@ def backtest(conn, stockcode, start, end, period, fund):
     cur = conn.cursor()
     table_name = 'stock_%s'%stockcode
     list_date = []
+    #timestamp格式
+    list_datetime = []
     list_asset = []
     list_cash = []
     list_holding = []
@@ -79,7 +80,7 @@ def backtest(conn, stockcode, start, end, period, fund):
                         holding = holding + buyamount * MIN_BUY_AMOUNT
                         cash = cash - buyamount * close_record * MIN_BUY_AMOUNT
                         asset = cash + holding * close_record
-                        needs_recorded = True
+                        #needs_recorded = True
                         isnotinvested = False
                     #记录指针下移一条
                     if index < len(result) - 1:
@@ -91,6 +92,7 @@ def backtest(conn, stockcode, start, end, period, fund):
                     list_price.append(close_record)
                     list_asset.append(asset)
                     list_date.append(dt.strftime("%Y-%m-%d"))
+                    list_datetime.append(time.mktime(dt.timetuple()))
                     print('%s 账户有操作！：asset=%s, cash=%s, holding=%s, price=%s'%(dt.strftime("%Y-%m-%d"),asset,cash,holding,close_record))
                 #模拟往后一天
                 dt = dt + datetime.timedelta(days=1)
@@ -118,22 +120,43 @@ def backtest(conn, stockcode, start, end, period, fund):
                         list_asset.append(asset)
                         list_date.append(dt.strftime("%Y-%m-%d"))
                 dt = dt + datetime.timedelta(days=1)
-        btrecords = [list_date, list_asset, list_cash, list_holding, list_price]
+        btrecords = [list_date, list_datetime, list_asset, list_cash, list_holding, list_price]
         return btrecords, 0    
     #初始日期大于结束日期        
     else:
         return [], 1
     
 if __name__ == '__main__':
-    fileurl = 'd:/python/aip/stock.sqlite'
+    import os
+    import matplotlib.pyplot as plt
+    from matplotlib.dates import AutoDateLocator, DateFormatter
+    from matplotlib.font_manager import FontProperties
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
     try:
-        conn = sqlite3.connect(fileurl)
+        conn = sqlite3.connect(SQLITE_DATABASE_URI)
         cur = conn.cursor()
-        start = '1999-10-01'
-        end = '1999-11-30'
-        btrecords,code = backtest(conn,'000002',start,end,'monthly',5000)
-        if code == 0:
-            print(btrecords)
+        table_name = 'stock_000563'
+        start = '2015-12-20'
+        end = '2017-01-20'
+        fund = 5000
+        period = 'monthly'
+        btrecords,code = backtest(conn,'000002',start,end,period,fund)
+        list_date, list_datetime, list_asset, list_cash, list_holding, list_price = btrecords
+        x=list_datetime
+        y=list_asset
+        z=list_date
+        print('x=%s, type(x)=%s'%(x,type(x)))
+        print('y=%s, type(x)=%s'%(y,type(y)))
+        font = FontProperties(fname = "c:/windows/fonts/simsun.ttc", size=14) 
+        plt.figure(figsize=(10, 6))
+        plt.plot(x,y)
+        plt.xticks(x,z,rotation=27)
+        plt.xlabel(u'年月',fontproperties=font)
+        plt.ylabel(u'账户资产',fontproperties=font)
+        plt.title(u'定投收益情况',fontproperties=font)
+        plt.savefig('d:/a.png')
+        plt.show()
     finally:
         if conn:
             cur.close()
