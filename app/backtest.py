@@ -60,14 +60,13 @@ def backtest(conn, stockcode, start, end, period, fund):
                     if period == 'monthly':
                         cash = cash + fund
                         asset = asset + fund
-                        isnotinvested = True
-                        needs_recorded = True
+                        isnotinvested = True    
                     else:
                         if month == month_invest:
                             cash = cash + fund
                             asset = asset + fund
                             isnotinvested = True
-                            needs_recorded = True
+                    needs_recorded = True
                 record = result[index]
                 date_record = record[0]
                 dt_record = datetime.datetime.strptime(date_record,"%Y-%m-%d")
@@ -111,14 +110,15 @@ def backtest(conn, stockcode, start, end, period, fund):
                         list_price.append(0)
                         list_asset.append(asset)
                         list_date.append(dt.strftime("%Y-%m-%d"))
-                    elif month == month_invest:
-                        cash = cash + fund    
-                        asset = cash
-                        list_holding.append(0)
-                        list_cash.append(cash)
-                        list_price.append(0)
-                        list_asset.append(asset)
-                        list_date.append(dt.strftime("%Y-%m-%d"))
+                    else:
+                        if month == month_invest:
+                            cash = cash + fund    
+                            asset = cash
+                            list_holding.append(0)
+                            list_cash.append(cash)
+                            list_price.append(0)
+                            list_asset.append(asset)
+                            list_date.append(dt.strftime("%Y-%m-%d"))
                 dt = dt + datetime.timedelta(days=1)
         btrecords = [list_date, list_datetime, list_asset, list_cash, list_holding, list_price]
         return btrecords, 0    
@@ -141,21 +141,31 @@ if __name__ == '__main__':
         end = '2017-01-20'
         fund = 5000
         period = 'monthly'
-        btrecords,code = backtest(conn,'000002',start,end,period,fund)
+        stockcode = '000002'
+        btrecords,code = backtest(conn,stockcode,start,end,period,fund)
         list_date, list_datetime, list_asset, list_cash, list_holding, list_price = btrecords
         x=list_datetime
         y=list_asset
         z=list_date
-        print('x=%s, type(x)=%s'%(x,type(x)))
-        print('y=%s, type(x)=%s'%(y,type(y)))
+        #print('x=%s, type(x)=%s'%(x,type(x)))
+        #print('y=%s, type(x)=%s'%(y,type(y)))
         font = FontProperties(fname = "c:/windows/fonts/simsun.ttc", size=14) 
         plt.figure(figsize=(10, 6))
         plt.plot(x,y)
         plt.xticks(x,z,rotation=27)
         plt.xlabel(u'年月',fontproperties=font)
         plt.ylabel(u'账户资产',fontproperties=font)
-        plt.title(u'定投收益情况',fontproperties=font)
+        plt.title(u'定投 %s 收益情况'%stockcode,fontproperties=font)
         plt.savefig('d:/a.png')
+        plt.show()
+        y=list_holding
+        plt.figure(figsize=(10, 6))
+        plt.bar(left=x,height=y,width=1000000,align='center')
+        plt.xticks(x,z,rotation=27)
+        plt.xlabel(u'年月',fontproperties=font)
+        plt.ylabel(u'持仓数量',fontproperties=font)
+        plt.title(u'持仓标的 %s 的情况'%stockcode,fontproperties=font)
+        plt.savefig('d:/b.png')
         plt.show()
     finally:
         if conn:
