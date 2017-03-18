@@ -16,47 +16,23 @@
 {% endblock %}
 
 {% block page_content %}
-	<div class="page-header">
-
+	<div class="page-content">
+        <div class="col-md-2">
         {{ wtf.quick_form(form) }}
-
-        <br />
+        
+        <br/>
         {% for message in get_flashed_messages(with_categories=True) %}
             <div class="alert alert-{{ message[0] }}">
                 {{ message[1] }}
             </div>
         {% endfor %}
-        <br />
+        </div>
         
-        {% if user %}
-        g.user={{ user }}<br>
-        
-        提示：输入证券代码进行回测。<p>
-        {% if records %}
- 
-        <table class="table table-striped">
-            <thead>
-                <tr align="center" valign="middle">
-                    <td align="center" valign="middle">日期</td>
-                    <td align="center" valign="middle">开盘价</td>
-                    <td align="center" valign="middle">收盘价</td>
-                    <td align="center" valign="middle">最高价</td>
-                    <td align="center" valign="middle">最低价</td>
-                </tr>
-            </thead>            
-            <tbody>
-            {% for record in records %}
-                <tr align="center" valign="middle">
-                    <td align="center" valign="middle">{{ record['date'] }}</td>
-                    <td align="center" valign="middle">{{ record['open'] }}</td>
-                    <td align="center" valign="middle">{{ record['close'] }}</td>
-                    <td align="center" valign="middle">{{ record['high'] }}</td>
-                    <td align="center" valign="middle">{{ record['low'] }}</td>
-                </tr>
+        {% if images %}
+            {% for image in images %}
+                <img src="{{ image }}" height="800" width="600">
             {% endfor %}
-            </tbody>
-        </table>  
-        {% endif %}
+        {% endif %} 
     </div>
     
 {% endblock %}

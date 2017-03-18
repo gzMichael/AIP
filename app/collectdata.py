@@ -13,6 +13,7 @@ def update_stock_data(conn):
         None
     '''
     df = ts.get_stock_basics()
+    df.to_sql('stock_basics', conn, flavor='sqlite', if_exists='replace')
     dtnow = datetime.datetime.now()
     dtstr = dtnow.strftime('%Y-%m-%d')
     print(dtstr)
@@ -44,9 +45,17 @@ def update_stock_data(conn):
                     print('更新了从%s 到%s 的日线记录：共%s条记录已更新.'%(dt1_str,dtstr,len(df2)))
                     df2.to_sql(table_name, conn, flavor='sqlite', if_exists='replace')
                 else:
-                    print('没有查询到需更新的数据。')
+                    df3 = ts.get_k_data(i, start='1990-01-01', end=dtstr)
+                    sql2 = "SELECT date FROM %s"%table_name
+                    rs2 = conn.execute(sql_query_date).fetchall()
+                    if len(df3) == len(rs2):
+                        print('没有查询到需更新的数据。')
+                    else:
+                        print('表格%s的日线有缺失，需要重新下载%s条数据。'%(i, len(df3)))
+                        df3.to_sql(table_name, conn, flavor='sqlite', if_exists='replace')
+                        
         else:
-            print('%s:表%s不存在，需要下载全部数据...'%(progress_str, table_name))
+            print('%s:表%s不存在，现在下载%s的全部日线数据...'%(progress_str, table_name, i))
             df2 = ts.get_k_data(i,start='1990-01-01',end=dtstr)
             df2.to_sql(table_name, conn, index=True)
             print('%s条数据已更新。'%len(df2))

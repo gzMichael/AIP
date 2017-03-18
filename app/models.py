@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 
 #用户表
 class User(UserMixin, db.Model):
@@ -24,6 +24,18 @@ class User(UserMixin, db.Model):
     def __init__(self, username, password):
         self.username = username
         self.password = password
+    
+    def is_authenticated(self):
+            return True
+
+    def is_active():
+        return True
+
+    def is_anonymous(self):
+            return False
+
+    def get_id(self):
+        return unicode(self.id)  
 
     def __repr__(self):
         return '<User %r>' % self.username
