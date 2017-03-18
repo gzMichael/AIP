@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
+import os
 import datetime
+import sqlite3
 from app import app, db, lm
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask_login import UserMixin, login_user, logout_user, current_user, login_required
 from flask_wtf import FlaskForm
-#from flask_sqlalchemy import paginate
 from wtforms import StringField, SubmitField, SelectField, BooleanField, PasswordField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
-from config import RECORDS_PER_PAGE
 from app.models import User, StockHistory, UserHistory
+from app.backtest import backtest, backtest_chart
 
 class LoginForm(FlaskForm):
     '''用户登陆表格'''
@@ -27,10 +28,31 @@ class RegisterForm(FlaskForm):
     def validate_username(self, field):
         if User.query.filter_by(username=field.data).first():
             raise ValidationError('用户名已存在')
-    
+
+def check_date_input(form, field):
+    if field.data:
+        try:
+            dt = datetime.datetime.strptime(field.data, "%Y-%m-%d")
+        except:
+            raise ValidationError('正确的日期格式为：YYYY-mm-dd')
+
+def check_fund_input(self, field):
+        if field.data:
+            try:
+                f = float(field.data)
+            except:    
+                raise ValidationError('请输入正确的定投数额')
+            else:
+                if f <= 0:
+                    raise ValidationError('请输入大于零的定投数额')
+            
 class QueryForm(FlaskForm):
     '''回测表格'''
-    stockid = StringField('股票代码', validators=[DataRequired()])
+    stockid = StringField('股票代码(如:600000)', validators=[DataRequired()])
+    start = StringField('开始日期', validators=[DataRequired(), check_date_input])
+    end = StringField('结束日期', validators=[DataRequired(), check_date_input])
+    period = SelectField('定投间隔', coerce=str, choices=[('monthly','每月'),('yearly','每年')])
+    fund = StringField('定投金额(如:1000)', validators=[DataRequired(), check_fund_input])
     submit = SubmitField('测试')
     
 @lm.user_loader
@@ -61,23 +83,43 @@ def logout():
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
-@login_required
 def index():
     queryform = QueryForm()
     if request.method == 'POST':
-        if queryform.stockid.data:
+        if queryform.validate():
             stockid = queryform.stockid.data
-            records = StockHistory.query.all()
-            if records:
-                return render_template('index.html', form=queryform, records=records, user=g.user)
-            else:
-                error_str = '无法查询到该股票'
-                flash(error_str, 'warning')      
-                return render_template('index.html', form=queryform, user=g.user)
-        else:
-                error_str = '请填写股票代码'
-                flash(error_str, 'warning')      
-                return render_template('index.html', form=queryform, user=g.user)
+            table_name = 'stock_%s'%stockid
+            start = queryform.start.data
+            end = queryform.end.data
+            period = queryform.period.data
+            fund = float(queryform.fund.data)
+            print('stockid=%s, start=%s, end=%s, period=%s, fund=%s'%(stockid,start,end,period,fund))
+            basedir = os.path.abspath(os.path.dirname(__file__))
+            SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
+            sql_query = "SELECT code FROM stock_basics WHERE code='%s'"%stockid
+            print(sql_query)
+            try:
+                conn = sqlite3.connect(SQLITE_DATABASE_URI)
+                rs = conn.execute(sql_query).fetchall()
+                if len(rs) > 0:
+                    btrecords = []
+                    btrecords, error_str, rscode = backtest(conn, stockid, start, end, period, fund)
+                    print('len(btrecords)=%s'%len(btrecords))
+                    if rscode == 0:
+                        imagefile_urls, error_str, ret = backtest_chart(btrecords, stockid)
+                        if ret == 0:
+                            return render_template('index.html', form=queryform, images=imagefile_urls)
+                        else:
+                            flash(error_str, 'warning')
+                    else:
+                        flash(error_str, 'warning')
+                else:
+                    error_str = '无法查询到该股票'
+                    flash(error_str, 'warning')
+            finally:
+                if conn:
+                    conn.close()
+    return render_template('index.html', form=queryform)
 
 @app.route('/history')
 def history():
