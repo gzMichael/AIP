@@ -20,12 +20,12 @@
         
         {% if images %}
             {% for image in images %}
-                <p><h3>{{ image['title'] }}：</h3></p>
+                <p><h5>{{ image['title'] }}：</h5></p>
                 <p><img src="static/{{ image['filename'] }}" height="600" width="800"></img></p>
             {% endfor %}
         {% endif %} 
         
-        <p><h4><a href="/">我要再测一次</a></h4></p>
+        <p><h5><a href="/">我要再测一次</a></h5></p>
     </div>
     
 {% endblock %}
