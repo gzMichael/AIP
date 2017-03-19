@@ -113,7 +113,7 @@ def backtest(conn, stockcode, start, end, period, fund):
                         list_cash.append(cash)
                         list_price.append(0)
                         list_asset.append(asset)
-                        list_date.append(dt.strftime("%Y-%m-%d"))
+                        list_date.append(dt.strftime("%y-%m"))
                         list_datetime.append(time.mktime(dt.timetuple()))
                     else:
                         if month == month_invest:
@@ -123,7 +123,7 @@ def backtest(conn, stockcode, start, end, period, fund):
                             list_cash.append(cash)
                             list_price.append(0)
                             list_asset.append(asset)
-                            list_date.append(dt.strftime("%Y-%m-%d"))
+                            list_date.append(dt.strftime("%y-%m"))
                             list_datetime.append(time.mktime(dt.timetuple()))
                 dt = dt + datetime.timedelta(days=1)
         btrecords = [list_date, list_datetime, list_asset, list_cash, list_holding, list_price]
