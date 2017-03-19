@@ -47,7 +47,7 @@ def update_stock_data(conn):
                 else:
                     df3 = ts.get_k_data(i, start='1990-01-01', end=dtstr)
                     sql2 = "SELECT date FROM %s"%table_name
-                    rs2 = conn.execute(sql_query_date).fetchall()
+                    rs2 = conn.execute(sql2).fetchall()
                     if len(df3) == len(rs2):
                         print('没有查询到需更新的数据。')
                     else:
