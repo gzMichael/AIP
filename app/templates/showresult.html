@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}定投收益回测{% endblock %}
+{% block navbar %}
+<div class="navbar navbar-inverse" role="navigation">
+	<div class="container">
+		<div class="span5 well pricehover">
+			<ul class="nav nav-pills">
+				<li class="active"><a href="/">定投回测</a></li>
+				<li><a href="{{url_for('about', _external=True)}}">About</a></li>
+			</ul>
+		</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_content %}
+	<div class="page-content">
+        
+        {% if images %}
+            {% for image in images %}
+                <p><h3>{{ image['title'] }}：</h3></p>
+                <p><img src="static/{{ image['filename'] }}" height="600" width="800"></img></p>
+            {% endfor %}
+        {% endif %} 
+        
+        <p><h4><a href="/">我要再测一次</a></h4></p>
+    </div>
+    
+{% endblock %}
