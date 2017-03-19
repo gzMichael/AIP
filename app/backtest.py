@@ -21,7 +21,7 @@ def backtest(conn, stockcode, start, end, period, fund):
         Int: The amount of fund of investment.
     Return:
         List: btrecords: [list_date, list_datetime, list_asset, list_cash, 
-                            list_holding, list_price]
+                            list_holding, list_price, list_fundinvested]
         Int: Return code: 0 - normal
                           1 - start/end date error
     '''
@@ -35,10 +35,12 @@ def backtest(conn, stockcode, start, end, period, fund):
     list_cash = []
     list_holding = []
     list_price = []
+    list_totalinvestment = []
     asset = 0
     cash = 0
     holding = 0
     price = 0
+    totalinvestment = 0
     dt_start = datetime.datetime.strptime(start, "%Y-%m-%d")
     dt_end = datetime.datetime.strptime(end, "%Y-%m-%d")
     #定期增加现金的日期与月份
@@ -64,11 +66,13 @@ def backtest(conn, stockcode, start, end, period, fund):
                     if period == 'monthly':
                         cash = cash + fund
                         asset = asset + fund
+                        totalinvestment = totalinvestment + fund
                         isnotinvested = True    
                     else:
                         if month == month_invest:
                             cash = cash + fund
                             asset = asset + fund
+                            totalinvestment = totalinvestment + fund
                             isnotinvested = True
                     needs_recorded = True
                 record = result[index]
@@ -90,12 +94,13 @@ def backtest(conn, stockcode, start, end, period, fund):
                         index = index + 1
                 #账户当天有资金出入或有买入        
                 if needs_recorded:
+                    list_totalinvestment.append(totalinvestment)
                     list_holding.append(holding)
                     list_cash.append(cash)
                     list_price.append(close_record)
                     list_asset.append(asset)
-                    list_date.append(dt.strftime("%Y-%m-%d"))
-                    list_datetime.append(time.mktime(dt.timetuple()))
+                    list_date.append(dt.strftime("%y-%m"))
+                    #list_datetime.append(time.mktime(dt.timetuple()))
                     #print('%s 账户有操作！：asset=%s, cash=%s, holding=%s, price=%s'%(dt.strftime("%Y-%m-%d"),asset,cash,holding,close_record))
                 #模拟往后一天
                 dt = dt + datetime.timedelta(days=1)
@@ -109,24 +114,28 @@ def backtest(conn, stockcode, start, end, period, fund):
                     if period == 'monthly':
                         cash = cash + fund
                         asset = cash
+                        totalinvestment = totalinvestment + fund
                         list_holding.append(0)
                         list_cash.append(cash)
                         list_price.append(0)
                         list_asset.append(asset)
                         list_date.append(dt.strftime("%y-%m"))
-                        list_datetime.append(time.mktime(dt.timetuple()))
+                        #list_datetime.append(time.mktime(dt.timetuple()))
+                        list_totalinvestment.append(totalinvestment)
                     else:
                         if month == month_invest:
                             cash = cash + fund    
                             asset = cash
+                            totalinvestment = totalinvestment + fund
                             list_holding.append(0)
                             list_cash.append(cash)
                             list_price.append(0)
                             list_asset.append(asset)
                             list_date.append(dt.strftime("%y-%m"))
-                            list_datetime.append(time.mktime(dt.timetuple()))
+                            #list_datetime.append(time.mktime(dt.timetuple()))
+                            list_totalinvestment.append(totalinvestment)
                 dt = dt + datetime.timedelta(days=1)
-        btrecords = [list_date, list_datetime, list_asset, list_cash, list_holding, list_price]
+        btrecords = [list_date, list_asset, list_cash, list_holding, list_price, list_totalinvestment]
         error_str = ''
         rscode = 0
         return btrecords, error_str, rscode
@@ -140,7 +149,7 @@ def backtest(conn, stockcode, start, end, period, fund):
 def backtest_chart(btrecords, stockcode):
     
     try:
-        list_date, list_datetime, list_asset, list_cash, list_holding, list_price = btrecords
+        list_date, list_asset, list_cash, list_holding, list_price, list_totalinvestment = btrecords
     except:
         images = []
         error_str = '不能读取回测结果'
@@ -149,46 +158,45 @@ def backtest_chart(btrecords, stockcode):
     else:    
         basedir = os.path.abspath(os.path.dirname(__file__))
         imagefile_dir = os.path.join(basedir, './static/')
-        w = []
-        x = []
-        y = []
         z = []
-        #X轴数据过多，需要合并来缩短显示数量
-        if len(list_datetime) > 30:
-            t = len(list_datetime) // 30
-            for i in range(0,len(list_datetime)-1):
-                if i % t == 0 :
-                    w.append(list_holding[i])
-                    x.append(list_datetime[i])
-                    y.append(list_asset[i])
+        #X轴数据过多，X轴坐标减少显示数量
+        if len(list_date) > 15:
+            t = len(list_date) // 15
+            for i in range(0,len(list_date)):
+                if i % t == 0:
                     z.append(list_date[i])
+                else:
+                    z.append('')
         else:
-            w = list_holding
-            x = list_datetime
-            y = list_asset
             z = list_date
+        w = list_holding
+        y = list_asset
+        x = range(len(y))
+        y2 = list_totalinvestment
         print('len(w)=%s, len(x)=%s, len(y)=%s, len(z)=%s'%(len(w),len(x),len(y),len(z)))
-        font = FontProperties(fname = "c:/windows/fonts/simsun.ttc", size=14) 
+        #font = FontProperties(fname = "c:/windows/fonts/simsun.ttc", size=12) 
         plt.figure(figsize=(8, 6))
-        plt.plot(x,y)
-        plt.xticks(x,z,rotation=55)
-        plt.xlabel(u'年月',fontproperties=font)
-        plt.ylabel(u'账户资产',fontproperties=font)
-        plt.title(u'定投 %s 收益情况'%stockcode,fontproperties=font)
+        plt.plot(x,y,color='r',label=u'Total Asset')
+        plt.plot(x,y2,color='b',label=u'Cash Investment')
+        plt.legend(loc='upper left')
+        plt.xticks(x,z,rotation=40)
+        #plt.xlabel(u'Date')
+        plt.ylabel(u'Asset')
+        plt.title(u'Investment Income of %s'%stockcode)
         imagefiles = []
         dt = time.mktime(datetime.datetime.now().timetuple())
         image_filename = str(dt) + '_1.png'
-        image_title = '资金曲线图'
+        image_title = u'资金曲线图'
         imagefiles.append({'title':image_title, 'filename':image_filename })
         imagefile_url = imagefile_dir + image_filename
         plt.savefig(imagefile_url)
         #plt.show()
         plt.figure(figsize=(8, 6))
-        plt.bar(left=x,height=w,width=1000000,align='center')
-        plt.xticks(x,z,rotation=55)
-        plt.xlabel(u'年月',fontproperties=font)
-        plt.ylabel(u'持仓数量',fontproperties=font)
-        plt.title(u'持仓标的 %s 的情况'%stockcode,fontproperties=font)
+        plt.bar(left=x,height=w,width=0.4,align='center')
+        plt.xticks(x,z,rotation=40)
+        #plt.xlabel(u'Date')
+        plt.ylabel(u'Positions')
+        plt.title(u'Changes in stock positions of %s'%stockcode)
         image_filename = str(dt) + '_2.png'
         image_title = '持仓变化图'
         imagefiles.append({'title':image_title, 'filename':image_filename })
