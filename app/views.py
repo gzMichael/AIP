@@ -106,9 +106,10 @@ def index():
                     btrecords, error_str, rscode = backtest(conn, stockid, start, end, period, fund)
                     print('len(btrecords)=%s'%len(btrecords))
                     if rscode == 0:
-                        imagefile_urls, error_str, ret = backtest_chart(btrecords, stockid)
+                        images, error_str, ret = backtest_chart(btrecords, stockid)
                         if ret == 0:
-                            return render_template('index.html', form=queryform, images=imagefile_urls)
+                            print('images=%s'%images)
+                            return render_template('showresult.html', form=queryform, images=images)
                         else:
                             flash(error_str, 'warning')
                     else:

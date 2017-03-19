@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
-
+import os
 import tushare as ts
 import sqlite3
 import time, datetime
 from math import floor
+import matplotlib.pyplot as plt
+from matplotlib.dates import AutoDateLocator, DateFormatter
+from matplotlib.font_manager import FontProperties
 
 MIN_BUY_AMOUNT = 100
 
@@ -135,10 +138,7 @@ def backtest(conn, stockcode, start, end, period, fund):
         return btrecords, error_str, rscode
     
 def backtest_chart(btrecords, stockcode):
-    import os
-    import matplotlib.pyplot as plt
-    from matplotlib.dates import AutoDateLocator, DateFormatter
-    from matplotlib.font_manager import FontProperties
+    
     try:
         list_date, list_datetime, list_asset, list_cash, list_holding, list_price = btrecords
     except:
@@ -148,7 +148,7 @@ def backtest_chart(btrecords, stockcode):
         return images, rscode, error_str
     else:    
         basedir = os.path.abspath(os.path.dirname(__file__))
-        imagefile_dir = os.path.join(basedir, 'static\\')
+        imagefile_dir = os.path.join(basedir, './static/')
         w = []
         x = []
         y = []
@@ -175,9 +175,12 @@ def backtest_chart(btrecords, stockcode):
         plt.xlabel(u'年月',fontproperties=font)
         plt.ylabel(u'账户资产',fontproperties=font)
         plt.title(u'定投 %s 收益情况'%stockcode,fontproperties=font)
-        imagefile_urls = []
-        imagefile_url = imagefile_dir + 'a.png'
-        imagefile_urls.append(imagefile_url)
+        imagefiles = []
+        dt = time.mktime(datetime.datetime.now().timetuple())
+        image_filename = str(dt) + '_1.png'
+        image_title = '资金曲线图'
+        imagefiles.append({'title':image_title, 'filename':image_filename })
+        imagefile_url = imagefile_dir + image_filename
         plt.savefig(imagefile_url)
         #plt.show()
         plt.figure(figsize=(8, 6))
@@ -186,13 +189,15 @@ def backtest_chart(btrecords, stockcode):
         plt.xlabel(u'年月',fontproperties=font)
         plt.ylabel(u'持仓数量',fontproperties=font)
         plt.title(u'持仓标的 %s 的情况'%stockcode,fontproperties=font)
-        imagefile_url = imagefile_dir + 'b.png'
-        imagefile_urls.append(imagefile_url)
+        image_filename = str(dt) + '_2.png'
+        image_title = '持仓变化图'
+        imagefiles.append({'title':image_title, 'filename':image_filename })
+        imagefile_url = imagefile_dir + image_filename
         plt.savefig(imagefile_url)
         #plt.show()
         error_str = ''
         rscode = 0
-        return imagefile_urls, error_str, rscode
+        return imagefiles, error_str, rscode
     
 if __name__ == '__main__':
     import os
