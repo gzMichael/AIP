@@ -1,14 +1,13 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}天气在线查询{% endblock %}
+{% block title %}定投收益回测{% endblock %}
 {% block navbar %}
 <div class="navbar navbar-inverse" role="navigation">
 	<div class="container">
 		<div class="span5 well pricehover">
 			<ul class="nav nav-pills">
-				<li><a href="{{url_for('index', _external=True)}}">天气查询</a></li>
-				<li><a href="{{url_for('history', _external=True)}}">历史查询</a></li>
+				<li><a href="{{url_for('index', _external=True)}}">定投回测</a></li>
 				<li class="active"><a href="#">About</a></li>
 			</ul>
 		</div>
@@ -18,10 +17,10 @@
 
 {% block page_content %}
 
-<p>版本: 1.01 </p>
+
+<p>版本: 0.5 </p>
 <p>程序作者: gzMichael </p>
-<p>email: <a href="mailto:1960809@qq.com">1960809@qq.com </a></p>
-<p><a href="https://github.com/gzMichael/Py103/issues/1">网站讨论区</a></p>
-<p><a href="https://github.com/gzMichael/Py103/tree/master/Chap6/project">程序源地址</a> </p>
+<p><a href="https://github.com/gzMichael/AIP/issues/1">网站讨论区</a></p>
+<p><a href="https://github.com/gzMichael/AIP/">程序源地址</a> </p>
 
 {% endblock %}

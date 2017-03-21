@@ -29,31 +29,51 @@ def update_stock_data(conn):
             for row in rows:
                 print('%s:表%s已存在，正在检查更新...'%(progress_str, table_name))
                 sql_query_date = "SELECT date FROM %s ORDER BY date DESC LIMIT 1"%table_name
-                rs = conn.execute(sql_query_date).fetchone()
-                if rs is None:
-                    cur.execute('DROP TABLE IF EXISTS %s'%table_name)
-                    #表格没有数据，从最早日期开始查询
-                    dt1_str = '1990-01-01'
-                else:    
-                    lastdate_str = rs[0]
-                    dt1 = datetime.datetime.strptime(lastdate_str, "%Y-%m-%d")
-                    dt1 = dt1 + datetime.timedelta(days=1)
-                    dt1_str = dt1.strftime("%Y-%m-%d")
-                #补充最后一条数据到今天的记录
-                df2 = ts.get_k_data(i, start=dt1_str, end=dtstr)
-                if len(df2) > 0:
-                    print('更新了从%s 到%s 的日线记录：共%s条记录已更新.'%(dt1_str,dtstr,len(df2)))
-                    df2.to_sql(table_name, conn, flavor='sqlite', if_exists='replace')
-                else:
-                    df3 = ts.get_k_data(i, start='1990-01-01', end=dtstr)
-                    sql2 = "SELECT date FROM %s"%table_name
-                    rs2 = conn.execute(sql2).fetchall()
-                    if len(df3) == len(rs2):
-                        print('没有查询到需更新的数据。')
-                    else:
-                        print('表格%s的日线有缺失，需要重新下载%s条数据。'%(i, len(df3)))
-                        df3.to_sql(table_name, conn, flavor='sqlite', if_exists='replace')
+                try:
+                    rs = conn.execute(sql_query_date).fetchone()
+                    if rs is None:
+                        cur.execute('DROP TABLE IF EXISTS %s'%table_name)
+                        #表格没有数据，从最早日期开始查询
+                        dt1_str = '1990-01-01'
+                    else:    
+                        lastdate_str = rs[0]
+                        dt1 = datetime.datetime.strptime(lastdate_str, "%Y-%m-%d")
+                        dt1 = dt1 + datetime.timedelta(days=1)
+                        dt1_str = dt1.strftime("%Y-%m-%d")
+                    #补充最后一条数据到今天的记录
+                    df2 = ts.get_k_data(i, start=dt1_str, end=dtstr)
+                    if len(df2) > 0:
+                        #print(df2)
                         
+                        for i in range(0,len(df2)):
+                            object = df2.values[i]
+                            print('object=%s'%object)
+                            #df2.to_sql(table_name, conn, flavor='sqlite', if_exists='replace')
+                            value_str = ''
+                            for i in range(0,len(object)):
+                                value_str = value_str + str(object[i])
+                                if i < len(object)-1:
+                                    value_str = value_str + ', '
+                        sql_insert = "INSERT INTO %s(date,open,close,high,low,volume,code) values (%s)"%(table_name,value_str)
+                        #print('sql_insert=%s, value_str= %s'%(sql_insert,value_str))
+                        try:
+                            conn.execute(sql_insert)
+                            conn.commit()
+                            print('更新了从%s 到%s 的日线记录：共%s条记录已更新.'%(dt1_str,dtstr,len(df2)))
+                        except:    
+                            conn.rollback()
+                            print('更新数据库错误：无法插入数据，回滚该次数据库操作。')
+                    else:
+                        df3 = ts.get_k_data(i, start='1990-01-01', end=dtstr)
+                        sql2 = "SELECT date FROM %s"%table_name
+                        rs2 = conn.execute(sql2).fetchall()
+                        if len(df3) == len(rs2):
+                            print('没有查询到需更新的数据。')
+                        else:
+                            print('表格%s的日线有缺失，需要重新下载%s条数据。'%(i, len(df3)))
+                            df3.to_sql(table_name, conn, flavor='sqlite', if_exists='replace')
+                except:
+                    print('查询数据库出错，无法查询表%s内容。'%table_name)
         else:
             print('%s:表%s不存在，现在下载%s的全部日线数据...'%(progress_str, table_name, i))
             df2 = ts.get_k_data(i,start='1990-01-01',end=dtstr)
