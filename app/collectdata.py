@@ -4,6 +4,8 @@ import os
 import tushare as ts
 import sqlite3
 import datetime
+import re,requests
+from bs4 import BeautifulSoup
     
 def update_stock_data(conn):
     '''Update all stock history records to the present day.
@@ -81,16 +83,85 @@ def update_stock_data(conn):
             print('%s条数据已更新。'%len(df2))
         rowcount = rowcount + 1
     return
+    
+def update_fund_data(conn):
+    url = "http://fund.eastmoney.com/f10/F10DataApi.aspx?type=lsjz&code-%s&page=1&per=9999"%fund_code
+    resp = requests.get(url)
+    soup = BeautifulSoup(resp.content,'lxml')
+    creatime = ""
+    data = ""
+    dict_funds ={}
+    table = soup.find("table", {"class" : "w782 comm lsjz"})
+    td_th = re.compile('t[dh]')
 
+    for row in table.findAll("td"):
+        cells = row.findAll(td_th)
+        if len(cells) == 7:
+            creatime = cells[0].find(text=True)
+            if not creatime:
+                continue
+            creatime = cells[0].find(text=True)
+            data = cells[2].find(text=True)
+            dict_funds[creatime] = data
+
+def get_fund_lists():
+    # url = 'http://fund.eastmoney.com/fund.html#os_0;isall_1;ft_|;pt_1'
+    # resp = requests.get(url)
+    # soup = BeautifulSoup(resp.content,'lxml')
+    html = open("all_funds_p1.html", "r")
+    table = BeautifulSoup(html,'lxml')
+    rows = table.find_all('tr')
+    list_fund_id = []
+    list_fund_code = []
+    list_fund_name = []
+    list_fund_net_value = []
+    list_fund_cum_net_value = []
+    for row in rows:
+        id = ''
+        code = ''
+        name = ''
+        net_value = ''
+        cum_net_value = ''
+        soup_id = row.find("td", {"class": "xh"})
+        soup_code = row.find("td", {"class": "bzdm"})
+        soup_net_value = row.find("td", {"class": "dwjz black"})
+        soup_cum_net_value = row.find("td", {"class": "ljjz black"})
+        if soup_id is not None:
+            id = soup_id.string
+        if soup_code is not None:
+            code = soup_code.string
+        soup_name = row.find("a", {"href": "%s.html"%code})
+        if soup_name is not None:
+            name = soup_name.string
+        if soup_net_value is not None:
+            net_value = soup_net_value.string
+        if soup_cum_net_value is not None:
+            cum_net_value = soup_cum_net_value.string
+        if id and code and name and net_value and cum_net_value:  
+            list_fund_id.append(id)
+            list_fund_code.append(code)
+            list_fund_name.append(name)
+            list_fund_net_value.append(net_value)
+            list_fund_cum_net_value.append(cum_net_value)
+    print('len(rows)=%s, len(list_fund_id)=%s, len(fund_code)=%s, len(name)=%s, len(net_value)=%s, len(cum_net_value)=%s'%(len(rows),len(list_fund_id),len(list_fund_code),len(list_fund_name),len(list_fund_net_value),len(list_fund_cum_net_value)))
+    print('fund_id: %s'%list_fund_id)
+    print('fund_code: %s'%list_fund_code)
+    print('list_fund_name: %s'%list_fund_name)
+    print('list_fund_net_value: %s'%list_fund_net_value)
+    print('list_fund_cum_net_value: %s'%list_fund_cum_net_value)
+    print(list_fund_id[197],list_fund_code[197],list_fund_name[197],list_fund_net_value[197],list_fund_cum_net_value[197])
+        
+            
 if __name__ == '__main__':
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
-    print(SQLITE_DATABASE_URI)
-    try:
-        conn = sqlite3.connect(SQLITE_DATABASE_URI)
-        cur = conn.cursor()
-        update_stock_data(conn)
-    finally:
-        if conn:
-            cur.close()
-            conn.close()
+    # basedir = os.path.abspath(os.path.dirname(__file__))
+    # SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
+    # print(SQLITE_DATABASE_URI)
+    # try:
+        # conn = sqlite3.connect(SQLITE_DATABASE_URI)
+        # cur = conn.cursor()
+        # update_stock_data(conn)
+    # finally:
+        # if conn:
+            # cur.close()
+            # conn.close()
+    get_fund_lists()        
