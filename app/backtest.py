@@ -43,7 +43,7 @@ def backtest(testtype, code, start, end, period, fund):
             cur.close()
         if conn:
             conn.close()
-    if len(rs) > 0:
+    if rs is not None:
         list_date = []
         list_asset = []
         list_cash = []
