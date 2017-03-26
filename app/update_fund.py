@@ -17,7 +17,7 @@ import pandas as pd
        
 def update_fund_data():
     '''Update all fund history records to the present day.
-       Fund list table: 'stock_basics'
+       Fund list table: 'fund_basics'
        Single fund history table: 'fund_xxxxxx'
     Args: 
         None

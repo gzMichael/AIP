@@ -21,18 +21,68 @@
         {% if summary %}
         <table class="table table-striped">
             <thead>
-            <tr>
+                <tr>
+                    <th>项目名称</th>
+                    <th>内容</th>
                     <th>项目名称</th>
                     <th>内容</th>
                 </tr>
             </thead>
             <tbody>
-                {% for row in summary %}
                 <tr>
-                    <td>{{ row[0] }}</td>
-                    <td>{{ row[1] }}</td>
+                    <td>{{ summary[0][0] }}</td>
+                    <td>{{ summary[0][1] }}</td>
+                    <td>{{ summary[9][0] }}</td>
+                    <td>{{ summary[9][1] }}</td>
                 </tr>
-                {% endfor %}
+                <tr>
+                    <td>{{ summary[1][0] }}</td>
+                    <td>{{ summary[1][1] }}</td>
+                    <td>{{ summary[10][0] }}</td>
+                    <td>{{ summary[10][1] }}</td>
+                </tr>
+                <tr>
+                    <td>{{ summary[2][0] }}</td>
+                    <td>{{ summary[2][1] }}</td>
+                    <td>{{ summary[11][0] }}</td>
+                    <td>{{ summary[11][1] }}</td>
+                </tr>
+                <tr>
+                    <td>{{ summary[3][0] }}</td>
+                    <td>{{ summary[3][1] }}</td>
+                    <td>{{ summary[12][0] }}</td>
+                    <td>{{ summary[12][1] }}</td>
+                </tr>
+                <tr>
+                    <td>{{ summary[4][0] }}</td>
+                    <td>{{ summary[4][1] }}</td>
+                    <td>{{ summary[13][0] }}</td>
+                    <td>{{ summary[13][1] }}</td>
+                </tr>
+                <tr>
+                    <td>{{ summary[5][0] }}</td>
+                    <td>{{ summary[5][1] }}</td>
+                    <td>{{ summary[14][0] }}</td>
+                    <td>{{ summary[14][1] }}</td>
+                </tr>
+                <tr>
+                    <td>{{ summary[6][0] }}</td>
+                    <td>{{ summary[6][1] }}</td>
+                    <td>{{ summary[15][0] }}</td>
+                    <td>{{ summary[15][1] }}</td>
+                </tr>
+                <tr>
+                    <td>{{ summary[7][0] }}</td>
+                    <td>{{ summary[7][1] }}</td>
+                    <td>{{ summary[16][0] }}</td>
+                    <td>{{ summary[16][1] }}</td>
+                </tr>
+                <tr>
+                    <td>{{ summary[8][0] }}</td>
+                    <td>{{ summary[8][1] }}</td>
+                    <td>{{ summary[17][0] }}</td>
+                    <td>{{ summary[17][1] }}</td>
+                </tr>
             </tbody>
         </table>    
         {% endif %} 

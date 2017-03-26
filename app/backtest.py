@@ -176,11 +176,12 @@ def backtest(testtype, code, start, end, period, fund):
             PnL_year = 0
             PnL_month = 0
             PnL_day = 0
-        str_PnL_year = str("%1.f"%PnL_year) + '%'
-        str_PnL_month = str("%2.f"%PnL_month) + '%'
-        str_PnL_day = str("%4.f"%PnL_day) + '%'
+        str_PnL_year = str("%.1f"%PnL_year) + '%'
+        str_PnL_month = str("%.2f"%PnL_month) + '%'
+        str_PnL_day = str("%.4f"%PnL_day) + '%'
         #汇总报告数据列表
         summary = []
+        # summary[0]
         unit_data = ['测试开始时间', start]
         summary.append(unit_data)
         unit_data = ['测试结束时间', end]
@@ -189,25 +190,38 @@ def backtest(testtype, code, start, end, period, fund):
         summary.append(unit_data)
         unit_data = ['品种代码', code]
         summary.append(unit_data)
-        unit_data = ['测试品种名称', name]
+        unit_data = ['测试品种名称', name] 
         summary.append(unit_data)
-        unit_data = ['定投周期', period]
+        if period == 'monthly':
+            str_period = '每月'
+            str_investtimes = monthcount
+        else:
+            str_period = '每年'
+            str_investtimes = monthcount // 12
+        unit_data = ['定投周期', str_period]
         summary.append(unit_data)
-        unit_data = ['每周期定投金额', fund]
+        unit_data = ['每周期定投金额', str('%.1f'%fund)]
         summary.append(unit_data)
-        unit_data = ['累计盈亏金额', str_PnL]
+        unit_data = ['投入期数', str_investtimes]
         summary.append(unit_data)
-        unit_data = ['累计盈亏百分比', str_PnL_percent]
+        unit_data = ['累计投入金额', totalinvestment]
         summary.append(unit_data)
-        unit_data = ['计算总周期(年)', yearcount]
+        unit_data = ['期末账户金额', asset]
+        summary.append(unit_data)
+        # summary[10]
+        unit_data = ['盈亏金额', str_PnL]
+        summary.append(unit_data)
+        unit_data = ['盈亏百分比', str_PnL_percent]
+        summary.append(unit_data)
+        unit_data = ['测试时长(年)', yearcount]
         summary.append(unit_data)
         unit_data = ['年化收益率(复合)', str_PnL_year]
         summary.append(unit_data)
-        unit_data = ['计算总周期(月)', monthcount]
+        unit_data = ['测试时长(月)', monthcount]
         summary.append(unit_data)
         unit_data = ['月化收益率(复合)', str_PnL_month]
         summary.append(unit_data)
-        unit_data = ['计算总周期(日)', daycount]
+        unit_data = ['测试时长(日)', daycount]
         summary.append(unit_data)
         unit_data = ['日化收益率(复合)', str_PnL_day]
         summary.append(unit_data)
