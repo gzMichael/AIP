@@ -37,7 +37,7 @@ def backtest(testtype, code, start, end, period, fund):
     sql_str = "SELECT name FROM sqlite_master WHERE type='table' AND name='%s'"%table_name
     rs = []
     try:
-        rs = conn.execute(sql_str)
+        rs = conn.execute(sql_str).fetchone()
     finally:
         if cur:
             cur.close()
