@@ -97,9 +97,9 @@ def index():
             fund = float(queryform.fund.data)
             print('testtype=%s, stockid=%s, start=%s, end=%s, period=%s, fund=%s'%(selection,stockid,start,end,period,fund))
             if selection == '股票':
-                table_name = 'stock_%s'%code
+                table_name = 'stock_%s'%stockid
             else:
-                table_name = 'fund_%s'%code
+                table_name = 'fund_%s'%stockid
             basedir = os.path.abspath(os.path.dirname(__file__))
             SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
             sql_query = "SELECT name FROM sqlite_master WHERE type='table' AND name='%s'"%table_name
