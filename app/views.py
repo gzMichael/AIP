@@ -49,7 +49,7 @@ def check_fund_input(self, field):
 class QueryForm(FlaskForm):
     '''回测表格'''
     stockid = StringField('股票代码(如:600000)', validators=[DataRequired()])
-    selection = SelectField('代码类型：基金/股票', choices=[(0,'股票'),(1,'基金')])
+    selection = SelectField('代码类型：基金/股票', coerce=str, choices=[('股票','股票'),('基金','基金')])
     start = StringField('开始日期(YYYY-mm-dd)', validators=[DataRequired(), check_date_input])
     end = StringField('结束日期(YYYY-mm-dd)', validators=[DataRequired(), check_date_input])
     period = SelectField('定投间隔', coerce=str, choices=[('monthly','每月'),('yearly','每年')])
@@ -94,10 +94,6 @@ def index():
             end = queryform.end.data
             period = queryform.period.data
             selection = queryform.selection.data
-            if selection == 0:
-                selection_str = '股票'
-            else:
-                selection_str = '基金'
             fund = float(queryform.fund.data)
             print('stockid=%s, start=%s, end=%s, period=%s, fund=%s'%(stockid,start,end,period,fund))
             basedir = os.path.abspath(os.path.dirname(__file__))
@@ -125,7 +121,7 @@ def index():
                     else:
                         flash(error_str, 'warning')
                 else:
-                    error_str = '无法查询到该%s'%selection_str
+                    error_str = '无法查询到该%s'%selection
                     flash(error_str, 'warning')
             finally:
                 if conn:

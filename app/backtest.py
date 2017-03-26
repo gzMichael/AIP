@@ -13,7 +13,7 @@ MIN_BUY_AMOUNT = 100
 def backtest(type, code, start, end, period, fund):
     '''Make a backtest of given stock code.
     Args:
-        Int: 0:stock, 1:fund
+        Sring: '股票' or '基金'
         Sring: the code of stock
         String: The date of start in format("%Y-%m-%d").
         String: The date of end in format("%Y-%m-%d").
@@ -30,9 +30,9 @@ def backtest(type, code, start, end, period, fund):
     SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
     conn = sqlite3.connect(SQLITE_DATABASE_URI)
     cur = conn.cursor()
-    if type == 0:
+    if type == '股票':
         table_name = 'stock_%s'%code
-    if type == 1:
+    if type == '基金':
         table_name = 'fund_%s'%code
     list_date = []
     #timestamp格式
@@ -55,11 +55,11 @@ def backtest(type, code, start, end, period, fund):
     #输入的初始日期和结束日期正常
     if dt_start <= dt_end:
         dt = dt_start
-        if type == 0:
+        if type == '股票':
             sql_query = ("SELECT date,close FROM %s WHERE date>='%s' AND date<='%s' "
                         "ORDER BY date"%(table_name,start,end)
                         )
-        if type == 1:
+        if type == '基金':
             sql_query = ("SELECT date,cum_netvalue FROM %s WHERE date>='%s' AND date<='%s' "
                         "ORDER BY date"%(table_name,start,end)
                         )
