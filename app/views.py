@@ -110,9 +110,18 @@ def index():
                 if len(rs) > 0:
                     btrecords = []
                     btrecords, error_str, rscode = backtest(selection, stockid, start, end, period, fund)
-                    print('len(btrecords)=%s'%len(btrecords))
+                    conn = sqlite3.connect(SQLITE_DATABASE_URI)
+                    if selection == '股票':
+                        tname = 'stock_basics'
+                    if selection == '基金':
+                        tname = 'fund_basics'
+                    sql_str = "SELECT name FROM %s WHERE code='%s'"%(tname,stockid)
+                    stockname = conn.execute(sql_str).fetchone()
+                    if stockname:
+                        name = stockname[0]
+                    print('len(btrecords)=%s, 测试品种是:%s'%(len(btrecords),name))
                     if rscode == 0:
-                        images, error_str, ret = backtest_chart(btrecords, stockid)
+                        images, error_str, ret = backtest_chart(btrecords, stockid, name, selection)
                         if ret == 0:
                             print('images=%s'%images)
                             return render_template('showresult.html', form=queryform, images=images)

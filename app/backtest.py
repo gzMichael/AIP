@@ -10,10 +10,10 @@ from matplotlib.font_manager import FontProperties
 
 MIN_BUY_AMOUNT = 100
 
-def backtest(type, code, start, end, period, fund):
+def backtest(testtype, code, start, end, period, fund):
     '''Make a backtest of given stock code.
     Args:
-        Sring: '股票' or '基金'
+        Sring: the type of the test:'股票' or '基金'
         Sring: the code of stock
         String: The date of start in format("%Y-%m-%d").
         String: The date of end in format("%Y-%m-%d").
@@ -30,9 +30,9 @@ def backtest(type, code, start, end, period, fund):
     SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
     conn = sqlite3.connect(SQLITE_DATABASE_URI)
     cur = conn.cursor()
-    if type == '股票':
+    if testtype == '股票':
         table_name = 'stock_%s'%code
-    if type == '基金':
+    if testtype == '基金':
         table_name = 'fund_%s'%code
     list_date = []
     #timestamp格式
@@ -55,11 +55,11 @@ def backtest(type, code, start, end, period, fund):
     #输入的初始日期和结束日期正常
     if dt_start <= dt_end:
         dt = dt_start
-        if type == '股票':
+        if testtype == '股票':
             sql_query = ("SELECT date,close FROM %s WHERE date>='%s' AND date<='%s' "
                         "ORDER BY date"%(table_name,start,end)
                         )
-        if type == '基金':
+        if testtype == '基金':
             sql_query = ("SELECT date,cum_netvalue FROM %s WHERE date>='%s' AND date<='%s' "
                         "ORDER BY date"%(table_name,start,end)
                         )
@@ -95,7 +95,7 @@ def backtest(type, code, start, end, period, fund):
                 record = result[index]
                 date_record = record[0]
                 dt_record = datetime.datetime.strptime(date_record,"%Y-%m-%d")
-                close_record = record[1]
+                close_record = float(record[1])
                 #当天可交易，判断是否能买入
                 if dt == dt_record:
                     #余额充足，并且入金后未购买
@@ -152,7 +152,8 @@ def backtest(type, code, start, end, period, fund):
                             #list_datetime.append(time.mktime(dt.timetuple()))
                             list_totalinvestment.append(totalinvestment)
                 dt = dt + datetime.timedelta(days=1)
-        btrecords = [list_date, list_asset, list_cash, list_holding, list_price, list_totalinvestment]
+        btrecords = ([list_date, list_asset, list_cash, 
+                    list_holding, list_price, list_totalinvestment])
         error_str = ''
         rscode = 0
         return btrecords, error_str, rscode
@@ -163,8 +164,18 @@ def backtest(type, code, start, end, period, fund):
         rscode = 1
         return btrecords, error_str, rscode
     
-def backtest_chart(btrecords, stockcode):
-    
+def backtest_chart(btrecords, code, name, testtype):
+    '''Draw a chart with the result of backtest.
+    Args:
+        List: btrecords: [list_date, list_datetime, list_asset, list_cash, 
+                            list_holding, list_price, list_fundinvested]
+        String: code of stock/fund
+        String: name of stock/fund
+        String: type: '股票' or '基金'
+    Return:
+        List: image_files: ([{'image_title':title, 'image_filename':url}, 
+                            error_str, rscode])
+    '''
     try:
         list_date, list_asset, list_cash, list_holding, list_price, list_totalinvestment = btrecords
     except:
@@ -199,11 +210,11 @@ def backtest_chart(btrecords, stockcode):
         plt.xticks(x,z,rotation=40)
         #plt.xlabel(u'Date')
         plt.ylabel(u'Asset')
-        plt.title(u'Investment Income of %s'%stockcode)
+        plt.title(u'Investment Income of %s'%code)
         imagefiles = []
         dt = time.mktime(datetime.datetime.now().timetuple())
         image_filename = str(dt) + '_1.png'
-        image_title = u'资金曲线图'
+        image_title = u'%s：%s(%s) 回测资金曲线图'%(testtype,name,code)
         imagefiles.append({'title':image_title, 'filename':image_filename })
         imagefile_url = imagefile_dir + image_filename
         plt.savefig(imagefile_url)
@@ -213,9 +224,9 @@ def backtest_chart(btrecords, stockcode):
         plt.xticks(x,z,rotation=40)
         #plt.xlabel(u'Date')
         plt.ylabel(u'Positions')
-        plt.title(u'Changes in stock positions of %s'%stockcode)
+        plt.title(u'Changes in positions of %s'%code)
         image_filename = str(dt) + '_2.png'
-        image_title = '持仓变化图'
+        image_title = u'%s：%s(%s) 持仓变化图'%(testtype,name,code)
         imagefiles.append({'title':image_title, 'filename':image_filename })
         imagefile_url = imagefile_dir + image_filename
         plt.savefig(imagefile_url)
