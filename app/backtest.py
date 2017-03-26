@@ -148,7 +148,17 @@ def backtest(testtype, code, start, end, period, fund):
                             list_totalinvestment.append(totalinvestment)
                 dt = dt + datetime.timedelta(days=1)
         #开始计算汇总测试结果
+        if testtype == '股票':
+            tname = 'stock_basics'
+        if testtype == '基金':
+            tname = 'fund_basics'
+        conn = sqlite3.connect(SQLITE_DATABASE_URI)
+        sql_str = "SELECT name FROM %s WHERE code='%s'"%(tname,code)
+        stockname = conn.execute(sql_str).fetchone()
+        if stockname:
+            name = stockname[0]
         PnL = list_asset[len(list_asset)-1] - list_totalinvestment[len(list_totalinvestment)-1]
+        str_PnL = str("%2.f"%PnL)
         PnL_percent = (PnL / list_totalinvestment[len(list_totalinvestment)-1]) * 100
         str_PnL_percent = str("%1.f"%PnL_percent) + '%'
         yearcount = dt_end.year - dt_start.year + 1
@@ -171,22 +181,36 @@ def backtest(testtype, code, start, end, period, fund):
         str_PnL_day = str("%4.f"%PnL_day) + '%'
         #汇总报告数据列表
         summary = []
-        dict_data = ['累计盈亏金额', PnL]
-        summary.append(dict_data)
-        dict_data = ['累计盈亏百分比', str_PnL_percent]
-        summary.append(dict_data)
-        dict_data = ['计算总周期(年)', yearcount]
-        summary.append(dict_data)
-        dict_data = ['年化收益率(复合)', str_PnL_year]
-        summary.append(dict_data)
-        dict_data = ['计算总周期(月)', monthcount]
-        summary.append(dict_data)
-        dict_data = ['月化收益率(复合)', str_PnL_month]
-        summary.append(dict_data)
-        dict_data = ['计算总周期(日)', daycount]
-        summary.append(dict_data)
-        dict_data = ['日化收益率(复合)', str_PnL_day]
-        summary.append(dict_data)
+        unit_data = ['测试开始时间', start]
+        summary.append(unit_data)
+        unit_data = ['测试结束时间', end]
+        summary.append(unit_data)
+        unit_data = ['代码类型', testtype]
+        summary.append(unit_data)
+        unit_data = ['品种代码', code]
+        summary.append(unit_data)
+        unit_data = ['测试品种名称', name]
+        summary.append(unit_data)
+        unit_data = ['定投周期', period]
+        summary.append(unit_data)
+        unit_data = ['每周期定投金额', fund]
+        summary.append(unit_data)
+        unit_data = ['累计盈亏金额', str_PnL]
+        summary.append(unit_data)
+        unit_data = ['累计盈亏百分比', str_PnL_percent]
+        summary.append(unit_data)
+        unit_data = ['计算总周期(年)', yearcount]
+        summary.append(unit_data)
+        unit_data = ['年化收益率(复合)', str_PnL_year]
+        summary.append(unit_data)
+        unit_data = ['计算总周期(月)', monthcount]
+        summary.append(unit_data)
+        unit_data = ['月化收益率(复合)', str_PnL_month]
+        summary.append(unit_data)
+        unit_data = ['计算总周期(日)', daycount]
+        summary.append(unit_data)
+        unit_data = ['日化收益率(复合)', str_PnL_day]
+        summary.append(unit_data)
         btrecords = ([summary, list_date, list_asset, list_cash, 
                     list_holding, list_price, list_totalinvestment])
         error_str = ''
@@ -199,14 +223,11 @@ def backtest(testtype, code, start, end, period, fund):
         rscode = 1
         return btrecords, error_str, rscode
     
-def backtest_chart(btrecords, code, name, testtype):
+def backtest_chart(btrecords):
     '''Draw a chart with the result of backtest.
     Args:
         List: btrecords: [summary, list_date, list_asset, list_cash, 
                             list_holding, list_price, list_fundinvested]
-        String: code of stock/fund
-        String: name of stock/fund
-        String: type: '股票' or '基金'
     Return:
         List: image_files: ([{'image_title':title, 'image_filename':url}, 
                             error_str, rscode])
@@ -219,6 +240,9 @@ def backtest_chart(btrecords, code, name, testtype):
         rscode = 1
         return images, rscode, error_str
     else:    
+        testtype = summary[2][1]
+        code = summary[3][1]
+        name = summary[4][1]
         basedir = os.path.abspath(os.path.dirname(__file__))
         imagefile_dir = os.path.join(basedir, './static/')
         z = []
