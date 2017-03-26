@@ -96,7 +96,7 @@ def index():
             selection = queryform.selection.data
             fund = float(queryform.fund.data)
             print('testtype=%s, stockid=%s, start=%s, end=%s, period=%s, fund=%s'%(selection,stockid,start,end,period,fund))
-            if testtype == '股票':
+            if selection == '股票':
                 table_name = 'stock_%s'%code
             else:
                 table_name = 'fund_%s'%code
