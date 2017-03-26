@@ -35,7 +35,7 @@ def backtest(testtype, code, start, end, period, fund):
     else:
         table_name = 'fund_%s'%code
     sql_str = "SELECT name FROM sqlite_master WHERE type='table' AND name='%s'"%table_name
-    rs = []
+    rs = None
     try:
         rs = conn.execute(sql_str).fetchone()
     finally:
