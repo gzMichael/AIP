@@ -95,10 +95,14 @@ def index():
             period = queryform.period.data
             selection = queryform.selection.data
             fund = float(queryform.fund.data)
-            print('stockid=%s, start=%s, end=%s, period=%s, fund=%s'%(stockid,start,end,period,fund))
+            print('testtype=%s, stockid=%s, start=%s, end=%s, period=%s, fund=%s'%(selection,stockid,start,end,period,fund))
+            if testtype == '股票':
+                table_name = 'stock_%s'%code
+            else:
+                table_name = 'fund_%s'%code
             basedir = os.path.abspath(os.path.dirname(__file__))
             SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
-            sql_query = "SELECT code FROM stock_basics WHERE code='%s'"%stockid
+            sql_query = "SELECT name FROM sqlite_master WHERE type='table' AND name='%s'"%table_name
             print(sql_query)
             try:
                 conn = sqlite3.connect(SQLITE_DATABASE_URI)
