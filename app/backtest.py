@@ -3,7 +3,7 @@ import os
 import tushare as ts
 import sqlite3
 import time, datetime
-from math import floor
+from math import floor, pow, fabs
 import matplotlib.pyplot as plt
 from matplotlib.dates import AutoDateLocator, DateFormatter
 from matplotlib.font_manager import FontProperties
@@ -20,7 +20,7 @@ def backtest(testtype, code, start, end, period, fund):
         String: The period of the backtest:Monthly or Yearly.
         Int: The amount of fund of investment.
     Return:
-        List: btrecords: [list_date, list_datetime, list_asset, list_cash, 
+        List: btrecords: [list_date, list_asset, list_cash, 
                             list_holding, list_price, list_fundinvested]
         Int: Return code: 0 - normal
                           1 - start/end date error
@@ -35,8 +35,6 @@ def backtest(testtype, code, start, end, period, fund):
     if testtype == '基金':
         table_name = 'fund_%s'%code
     list_date = []
-    #timestamp格式
-    list_datetime = []
     list_asset = []
     list_cash = []
     list_holding = []
@@ -117,7 +115,6 @@ def backtest(testtype, code, start, end, period, fund):
                     list_price.append(close_record)
                     list_asset.append(asset)
                     list_date.append(dt.strftime("%y-%m"))
-                    #list_datetime.append(time.mktime(dt.timetuple()))
                     #print('%s 账户有操作！：asset=%s, cash=%s, holding=%s, price=%s'%(dt.strftime("%Y-%m-%d"),asset,cash,holding,close_record))
                 #模拟往后一天
                 dt = dt + datetime.timedelta(days=1)
@@ -137,7 +134,6 @@ def backtest(testtype, code, start, end, period, fund):
                         list_price.append(0)
                         list_asset.append(asset)
                         list_date.append(dt.strftime("%y-%m"))
-                        #list_datetime.append(time.mktime(dt.timetuple()))
                         list_totalinvestment.append(totalinvestment)
                     else:
                         if month == month_invest:
@@ -149,10 +145,49 @@ def backtest(testtype, code, start, end, period, fund):
                             list_price.append(0)
                             list_asset.append(asset)
                             list_date.append(dt.strftime("%y-%m"))
-                            #list_datetime.append(time.mktime(dt.timetuple()))
                             list_totalinvestment.append(totalinvestment)
                 dt = dt + datetime.timedelta(days=1)
-        btrecords = ([list_date, list_asset, list_cash, 
+        #开始计算汇总测试结果
+        PnL = list_asset[len(list_asset)-1] - list_totalinvestment[len(list_totalinvestment)-1]
+        PnL_percent = (PnL / list_totalinvestment[len(list_totalinvestment)-1]) * 100
+        str_PnL_percent = str("%1.f"%PnL_percent) + '%'
+        yearcount = dt_end.year - dt_start.year + 1
+        monthcount = (yearcount-1) * 12 + dt_end.month - dt_start.month + 1
+        daycount = (dt_end - dt_start).days
+        if PnL > 0:
+            PnL_year = (pow(PnL,1/yearcount) - 1) * 100
+            PnL_month = (pow(PnL,1/monthcount) - 1) * 100
+            PnL_day = (pow(PnL,1/daycount) - 1) * 100
+        elif PnL < 0:
+            PnL_year = (pow(fabs(PnL),1/yearcount) - 1) * (-100)
+            PnL_month = (pow(fabs(PnL),1/monthcount) - 1) * (-100)
+            PnL_day = (pow(fabs(PnL),1/daycount) - 1) * (-100)
+        else:
+            PnL_year = 0
+            PnL_month = 0
+            PnL_day = 0
+        str_PnL_year = str("%1.f"%PnL_year) + '%'
+        str_PnL_month = str("%2.f"%PnL_month) + '%'
+        str_PnL_day = str("%4.f"%PnL_day) + '%'
+        #汇总报告数据列表
+        summary = []
+        dict_data = ['累计盈亏金额', PnL]
+        summary.append(dict_data)
+        dict_data = ['累计盈亏百分比', str_PnL_percent]
+        summary.append(dict_data)
+        dict_data = ['计算总周期(年)', yearcount]
+        summary.append(dict_data)
+        dict_data = ['年化收益率(复合)', str_PnL_year]
+        summary.append(dict_data)
+        dict_data = ['计算总周期(月)', monthcount]
+        summary.append(dict_data)
+        dict_data = ['月化收益率(复合)', str_PnL_month]
+        summary.append(dict_data)
+        dict_data = ['计算总周期(日)', daycount]
+        summary.append(dict_data)
+        dict_data = ['日化收益率(复合)', str_PnL_day]
+        summary.append(dict_data)
+        btrecords = ([summary, list_date, list_asset, list_cash, 
                     list_holding, list_price, list_totalinvestment])
         error_str = ''
         rscode = 0
@@ -167,7 +202,7 @@ def backtest(testtype, code, start, end, period, fund):
 def backtest_chart(btrecords, code, name, testtype):
     '''Draw a chart with the result of backtest.
     Args:
-        List: btrecords: [list_date, list_datetime, list_asset, list_cash, 
+        List: btrecords: [summary, list_date, list_asset, list_cash, 
                             list_holding, list_price, list_fundinvested]
         String: code of stock/fund
         String: name of stock/fund
@@ -177,7 +212,7 @@ def backtest_chart(btrecords, code, name, testtype):
                             error_str, rscode])
     '''
     try:
-        list_date, list_asset, list_cash, list_holding, list_price, list_totalinvestment = btrecords
+        summary, list_date, list_asset, list_cash, list_holding, list_price, list_totalinvestment = btrecords
     except:
         images = []
         error_str = '不能读取回测结果'
@@ -233,7 +268,7 @@ def backtest_chart(btrecords, code, name, testtype):
         #plt.show()
         error_str = ''
         rscode = 0
-        return imagefiles, error_str, rscode
+        return summary, imagefiles, error_str, rscode
     
 if __name__ == '__main__':
     import os

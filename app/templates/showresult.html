@@ -17,6 +17,25 @@
 
 {% block page_content %}
 	<div class="page-content">
+    
+        {% if summary %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                    <th>项目名称</th>
+                    <th>内容</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in summary %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>    
+        {% endif %} 
         
         {% if images %}
             {% for image in images %}

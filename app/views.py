@@ -119,12 +119,12 @@ def index():
                     stockname = conn.execute(sql_str).fetchone()
                     if stockname:
                         name = stockname[0]
-                    print('len(btrecords)=%s, 测试品种是:%s'%(len(btrecords),name))
+                    #print('len(btrecords)=%s, 测试品种是:%s'%(len(btrecords),name))
                     if rscode == 0:
-                        images, error_str, ret = backtest_chart(btrecords, stockid, name, selection)
+                        summary, images, error_str, ret = backtest_chart(btrecords, stockid, name, selection)
                         if ret == 0:
                             print('images=%s'%images)
-                            return render_template('showresult.html', form=queryform, images=images)
+                            return render_template('showresult.html', form=queryform, images=images, summary=summary)
                         else:
                             flash(error_str, 'warning')
                     else:
