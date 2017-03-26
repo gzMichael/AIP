@@ -62,6 +62,7 @@ def backtest(testtype, code, start, end, period, fund):
                         "ORDER BY date"%(table_name,start,end)
                         )
         index = 0
+        result = []
         try:
             result = cur.execute(sql_query).fetchall()
         except sqlite3.OperationalError as error:
