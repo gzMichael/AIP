@@ -44,7 +44,7 @@ def update_fund_data():
         fund_code = row
         table_name = 'fund_%s'%fund_code
         url = "http://fund.eastmoney.com/f10/F10DataApi.aspx?type=lsjz&code=%s&page=1&per=9999"%fund_code
-        print('code=%s, type(code)=%s, url=%s'%(fund_code,type(fund_code),url))
+        #print('code=%s, type(code)=%s, url=%s'%(fund_code,type(fund_code),url))
         resp = requests.get(url)
         soup = BeautifulSoup(resp.content,'lxml')
         creatime = ""

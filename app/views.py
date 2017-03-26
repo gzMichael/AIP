@@ -49,8 +49,9 @@ def check_fund_input(self, field):
 class QueryForm(FlaskForm):
     '''回测表格'''
     stockid = StringField('股票代码(如:600000)', validators=[DataRequired()])
-    start = StringField('开始日期', validators=[DataRequired(), check_date_input])
-    end = StringField('结束日期', validators=[DataRequired(), check_date_input])
+    selection = SelectField('代码类型：基金/股票', choices=[(0,'股票'),(1,'基金')])
+    start = StringField('开始日期(YYYY-mm-dd)', validators=[DataRequired(), check_date_input])
+    end = StringField('结束日期(YYYY-mm-dd)', validators=[DataRequired(), check_date_input])
     period = SelectField('定投间隔', coerce=str, choices=[('monthly','每月'),('yearly','每年')])
     fund = StringField('定投金额(如:1000)', validators=[DataRequired(), check_fund_input])
     submit = SubmitField('测试')
@@ -92,6 +93,11 @@ def index():
             start = queryform.start.data
             end = queryform.end.data
             period = queryform.period.data
+            selection = queryform.selection.data
+            if selection == 0:
+                selection_str = '股票'
+            else:
+                selection_str = '基金'
             fund = float(queryform.fund.data)
             print('stockid=%s, start=%s, end=%s, period=%s, fund=%s'%(stockid,start,end,period,fund))
             basedir = os.path.abspath(os.path.dirname(__file__))
@@ -100,10 +106,14 @@ def index():
             print(sql_query)
             try:
                 conn = sqlite3.connect(SQLITE_DATABASE_URI)
-                rs = conn.execute(sql_query).fetchall()
+                try:
+                    rs = conn.execute(sql_query).fetchall()
+                finally:
+                    if conn:
+                        conn.close()
                 if len(rs) > 0:
                     btrecords = []
-                    btrecords, error_str, rscode = backtest(conn, stockid, start, end, period, fund)
+                    btrecords, error_str, rscode = backtest(selection, stockid, start, end, period, fund)
                     print('len(btrecords)=%s'%len(btrecords))
                     if rscode == 0:
                         images, error_str, ret = backtest_chart(btrecords, stockid)
@@ -115,7 +125,7 @@ def index():
                     else:
                         flash(error_str, 'warning')
                 else:
-                    error_str = '无法查询到该股票'
+                    error_str = '无法查询到该%s'%selection_str
                     flash(error_str, 'warning')
             finally:
                 if conn:

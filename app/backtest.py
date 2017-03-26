@@ -10,10 +10,10 @@ from matplotlib.font_manager import FontProperties
 
 MIN_BUY_AMOUNT = 100
 
-def backtest(conn, stockcode, start, end, period, fund):
+def backtest(type, code, start, end, period, fund):
     '''Make a backtest of given stock code.
     Args:
-        Connection: Connection of database
+        Int: 0:stock, 1:fund
         Sring: the code of stock
         String: The date of start in format("%Y-%m-%d").
         String: The date of end in format("%Y-%m-%d").
@@ -26,8 +26,14 @@ def backtest(conn, stockcode, start, end, period, fund):
                           1 - start/end date error
     '''
     #init
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
+    conn = sqlite3.connect(SQLITE_DATABASE_URI)
     cur = conn.cursor()
-    table_name = 'stock_%s'%stockcode
+    if type == 0:
+        table_name = 'stock_%s'%code
+    if type == 1:
+        table_name = 'fund_%s'%code
     list_date = []
     #timestamp格式
     list_datetime = []
@@ -49,12 +55,23 @@ def backtest(conn, stockcode, start, end, period, fund):
     #输入的初始日期和结束日期正常
     if dt_start <= dt_end:
         dt = dt_start
-        sql_query = ("SELECT date,close FROM %s WHERE date>='%s' AND date<='%s' "
-                    "ORDER BY date"%(table_name,start,end)
-                    )
+        if type == 0:
+            sql_query = ("SELECT date,close FROM %s WHERE date>='%s' AND date<='%s' "
+                        "ORDER BY date"%(table_name,start,end)
+                        )
+        if type == 1:
+            sql_query = ("SELECT date,cum_netvalue FROM %s WHERE date>='%s' AND date<='%s' "
+                        "ORDER BY date"%(table_name,start,end)
+                        )
         index = 0
-        result = cur.execute(sql_query).fetchall()
-        print('sql=%s, result=%s, len(result)=%s'%(sql_query, result, len(result)))
+        try:
+            result = cur.execute(sql_query).fetchall()
+        except sqlite3.OperationalError as error:
+            print('操作Sqlite3数据库出现错误，错误信息是：%s'%error)
+        finally:
+            if conn:
+                conn.close()
+        #print('sql=%s, result=%s, len(result)=%s'%(sql_query, result, len(result)))
         #查询到历史数据
         if len(result) > 0:
             #开始回测过程
@@ -214,24 +231,18 @@ if __name__ == '__main__':
     from matplotlib.font_manager import FontProperties
     basedir = os.path.abspath(os.path.dirname(__file__))
     SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
-    try:
-        conn = sqlite3.connect(SQLITE_DATABASE_URI)
-        cur = conn.cursor()
-        start = '2000-12-01'
-        end = '2003-02-2'
-        fund = 5000
-        period = 'monthly'
-        stockcode = '000002'
-        table_name = 'stock_%s'%stockcode
-        btrecords, error_str, rscode = backtest(conn,stockcode,start,end,period,fund)
-        if rscode == 0:
-            images, error_str, ret = backtest_chart(btrecords, stockcode)
-            if ret != 0:
-                print(error_str)
-        else:
+    conn = sqlite3.connect(SQLITE_DATABASE_URI)
+    # cur = conn.cursor()
+    start = '2000-12-01'
+    end = '2003-02-2'
+    fund = 5000
+    period = 'monthly'
+    stockcode = '000002'
+    table_name = 'stock_%s'%stockcode
+    btrecords, error_str, rscode = backtest(stockcode,start,end,period,fund)
+    if rscode == 0:
+        images, error_str, ret = backtest_chart(btrecords, stockcode)
+        if ret != 0:
             print(error_str)
-    finally:
-        if cur:
-            cur.close()
-        if conn:            
-            conn.close()
+    else:
+        print(error_str)

@@ -54,7 +54,7 @@ def update_stock_data():
         if len(rows) > 0:
             for row in rows:
                 print('%s:表%s已存在，正在检查更新...'%(progress_str, table_name))
-                print('len(rows)=%s, row=%s'%(len(rows),row))
+                #print('len(rows)=%s, row=%s'%(len(rows),row))
                 sql_query_date = "SELECT date FROM %s ORDER BY date DESC LIMIT 1"%table_name
                 conn = sqlite3.connect(SQLITE_DATABASE_URI)
                 cur = conn.cursor()
