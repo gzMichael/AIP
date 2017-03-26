@@ -156,6 +156,7 @@ def backtest(testtype, code, start, end, period, fund):
         conn = sqlite3.connect(SQLITE_DATABASE_URI)
         sql_str = "SELECT name FROM %s WHERE code='%s'"%(tname,code)
         stockname = conn.execute(sql_str).fetchone()
+        name = ''
         if stockname:
             name = stockname[0]
         PnL = list_asset[len(list_asset)-1] - list_totalinvestment[len(list_totalinvestment)-1]
