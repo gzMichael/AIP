@@ -179,7 +179,7 @@ def backtest(testtype, code, start, end, period, fund):
             yearcount = dt_end.year - dt_start.year + 1
             monthcount = (yearcount-1) * 12 + dt_end.month - dt_start.month + 1
             daycount = (dt_end - dt_start).days
-            if PnL = 0:
+            if PnL == 0:
                 PnL_year = 0
                 PnL_month = 0
                 PnL_day = 0
