@@ -173,24 +173,21 @@ def backtest(testtype, code, start, end, period, fund):
             if stockname:
                 name = stockname[0]
             PnL = list_asset[len(list_asset)-1] - list_totalinvestment[len(list_totalinvestment)-1]
-            str_PnL = str("%2.f"%PnL)
+            str_PnL = str("%.1f"%PnL)
             PnL_percent = PnL / list_totalinvestment[len(list_totalinvestment)-1]
-            str_PnL_percent = str("%1.f"%(PnL_percent*100)) + '%'
+            str_PnL_percent = str("%.1f"%(PnL_percent*100)) + '%'
             yearcount = dt_end.year - dt_start.year + 1
             monthcount = (yearcount-1) * 12 + dt_end.month - dt_start.month + 1
             daycount = (dt_end - dt_start).days
-            if PnL > 0:
-                PnL_year = (pow(PnL_percent,1/yearcount) - 1) * 100
-                PnL_month = (pow(PnL_percent,1/monthcount) - 1) * 100
-                PnL_day = (pow(PnL_percent,1/daycount) - 1) * 100
-            elif PnL < 0:
-                PnL_year = (pow(fabs(PnL_percent),1/yearcount) - 1) * (-100)
-                PnL_month = (pow(fabs(PnL_percent),1/monthcount) - 1) * (-100)
-                PnL_day = (pow(fabs(PnL_percent),1/daycount) - 1) * (-100)
-            else:
+            if PnL = 0:
                 PnL_year = 0
                 PnL_month = 0
                 PnL_day = 0
+            else:
+                PnL_year = (pow((PnL_percent+1),1/yearcount) - 1) * 100
+                PnL_month = (pow((PnL_percent+1),1/monthcount) - 1) * 100
+                PnL_day = (pow((PnL_percent+1),1/daycount) - 1) * 100
+                
             str_PnL_year = str("%.1f"%PnL_year) + '%'
             str_PnL_month = str("%.2f"%PnL_month) + '%'
             str_PnL_day = str("%.4f"%PnL_day) + '%'
