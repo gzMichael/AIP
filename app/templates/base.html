@@ -4,7 +4,10 @@
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 {% endblock %}
 {% block title %}定投收益回测{% endblock %}
-
+{% block scripts %}
+    <script src="{{bootstrap_find_resource('jquery-1.8.3.min.js', cdn='jquery')}}"></script>
+    <script src="{{bootstrap_find_resource('js/bootstrap-datetimepicker.js', cdn='bootstrap')}}"></script>
+{%- endblock scripts %}
 
 {% block navbar %}
 {% endblock %}
