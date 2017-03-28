@@ -265,6 +265,7 @@ def backtest(testtype, code, start, end, period, fund):
     #*****************************************开始画图*****************************************
     #******************************************************************************************
     imagefile_dir = os.path.join(basedir, './static/')
+    #z是X轴的坐标值显示标签
     z = []
     #X轴数据过多，X轴坐标减少显示数量
     if len(list_date) > 10:
@@ -282,6 +283,7 @@ def backtest(testtype, code, start, end, period, fund):
     y2 = list_totalinvestment
     print('len(w)=%s, len(x)=%s, len(y)=%s, len(z)=%s'%(len(w),len(x),len(y),len(z)))
     #font = FontProperties(fname = "c:/windows/fonts/simsun.ttc", size=12) 
+    #*****************************************图1：资金曲线图*****************************************
     plt.figure(figsize=(8, 6))
     plt.plot(x,y,color='r',label=u'Total Asset')
     plt.plot(x,y2,color='b',label=u'Cash Investment')
@@ -293,6 +295,7 @@ def backtest(testtype, code, start, end, period, fund):
     #plt.xlabel(u'Date')
     plt.ylabel(u'Asset')
     plt.title(u'Investment Income of %s'%code)
+    plt.grid(True)
     imagefiles = []
     dt = time.mktime(datetime.datetime.now().timetuple())
     image_filename = str(dt) + '_1.png'
@@ -301,18 +304,41 @@ def backtest(testtype, code, start, end, period, fund):
     imagefile_url = imagefile_dir + image_filename
     plt.savefig(imagefile_url)
     #plt.show()
+    #*****************************************图2：盈亏曲线图*****************************************
+    plt.figure(figsize=(8, 6))
+    i = 0
+    j = len(list_totalinvestment)
+    y = []
+    while i < j:
+        append_me = list_asset[i] - list_totalinvestment[i]
+        y.append(append_me)
+        i+=1                      
+    plt.plot(x,y,color='r',label=u'Profit And Loss Chart')
+    plt.xticks(x,z,rotation=45)
+    #plt.xlabel(u'Date')
+    plt.ylabel(u'Profit')
+    plt.title(u'Profit and Lost Chart of %s'%code)
+    plt.grid(True)
+    image_filename = str(dt) + '_2.png'
+    image_title = u'%s：%s(%s) 盈亏曲线图'%(testtype,name,code)
+    imagefiles.append({'title':image_title, 'filename':image_filename })
+    imagefile_url = imagefile_dir + image_filename
+    plt.savefig(imagefile_url)
+    #*****************************************图3：持仓曲线图*****************************************
     plt.figure(figsize=(8, 6))
     plt.bar(left=x,height=w,width=0.4,align='center')
     plt.xticks(x,z,rotation=45)
     #plt.xlabel(u'Date')
     plt.ylabel(u'Positions')
     plt.title(u'Changes in positions of %s'%code)
-    image_filename = str(dt) + '_2.png'
+    plt.grid(True)
+    image_filename = str(dt) + '_3.png'
     image_title = u'%s：%s(%s) 持仓变化图'%(testtype,name,code)
     imagefiles.append({'title':image_title, 'filename':image_filename })
     imagefile_url = imagefile_dir + image_filename
     plt.savefig(imagefile_url)
     #plt.show()
+    #*****************************************图4：行情走势图*****************************************
     plt.figure(figsize=(8, 6))
     ax1 = plt.subplot2grid((1,1), (0,0),label=u'Price Chart')
     if testtype == '股票':
@@ -332,15 +358,15 @@ def backtest(testtype, code, start, end, period, fund):
                 cur.close()
             if conn:
                 conn.close()
-        x = 0
-        y = len(result)
+        i = 0
+        j = len(result)
         ohlc = []
-        while x < y:
-            date_time = datetime.datetime.strptime(result[x][1],'%Y-%m-%d')
+        while i < j:
+            date_time = datetime.datetime.strptime(result[i][1],'%Y-%m-%d')
             t = date2num(date_time)
-            append_me = t, result[x][2], result[x][3], result[x][4], result[x][5], result[x][6]
+            append_me = t, result[i][2], result[i][3], result[i][4], result[i][5], result[i][6]
             ohlc.append(append_me)
-            x+=1                
+            i+=1                
     if testtype == '基金':
         sql_query = ("SELECT date,cum_netvalue FROM %s WHERE date>='%s' AND date<='%s' "
                     "ORDER BY date"%(table_name,start,end)
@@ -356,15 +382,15 @@ def backtest(testtype, code, start, end, period, fund):
                 cur.close()
             if conn:
                 conn.close()
-        x = 0
-        y = len(result)
+        i = 0
+        j = len(result)
         ohlc = []
-        while x < y:
-            date_time = datetime.datetime.strptime(result[x][0],'%Y-%m-%d')
+        while i < j:
+            date_time = datetime.datetime.strptime(result[i][0],'%Y-%m-%d')
             t = date2num(date_time)
-            append_me = t, result[x][1], result[x][1], result[x][1], result[x][1], 0
+            append_me = t, result[i][1], result[i][1], result[i][1], result[i][1], 0
             ohlc.append(append_me)
-            x+=1                       
+            i+=1                       
     candlestick_ohlc(ax1, ohlc, width=0.2, colorup='#77d879', colordown='#db3f3f')
     for label in ax1.xaxis.get_ticklabels():
         label.set_rotation(45)
@@ -379,7 +405,7 @@ def backtest(testtype, code, start, end, period, fund):
         str_title = u'Fund: %s'%code
     plt.title(str_title)
     plt.legend()
-    image_filename = str(dt) + '_3.png'
+    image_filename = str(dt) + '_4.png'
     image_title = u'%s：%s(%s) 在 %s 至 %s 的行情走势图'%(testtype,name,code,start,end)
     imagefiles.append({'title':image_title, 'filename':image_filename })
     imagefile_url = imagefile_dir + image_filename
