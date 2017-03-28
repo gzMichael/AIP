@@ -250,7 +250,7 @@ def backtest(testtype, code, start, end, period, fund):
             return btrecords, error_str, rscode
     else:
         btrecords = []
-        error_str = '''没有查询到该品种的数据记录，请确认输入的代码/品种是否正确
+        error_str = '''没有查询到该品种的数据记录，请确认输入的代码/品种是否正确\n
                     如果这是数据采集的问题，请与开发者(gzMichael:1960809@qq.com)联系，谢谢！'''
         rscode = 2
         return btrecords, error_str, rscode

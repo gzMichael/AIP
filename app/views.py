@@ -128,7 +128,7 @@ def index():
                     else:
                         flash(error_str, 'warning')
                 else:
-                    error_str = '无法查询到该%s'%selection
+                    error_str = '无法查询到代码为 %s 的%s'%(stockid,selection)
                     flash(error_str, 'warning')
             finally:
                 if conn:
