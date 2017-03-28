@@ -9,7 +9,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, SelectField, BooleanField, PasswordField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
 from app.models import User, StockHistory, UserHistory
-from app.backtest import backtest, backtest_chart
+from app.backtest import backtest
 
 class LoginForm(FlaskForm):
     '''用户登陆表格'''
@@ -94,8 +94,9 @@ def index():
         if queryform.validate():
             stockid = queryform.stockid.data
             table_name = 'stock_%s'%stockid
-            start = queryform.start.data
-            end = queryform.end.data
+            #将输入格式标准化后再传入函数
+            start = datetime.datetime.strptime(queryform.start.data, "%Y-%m-%d").strftime("%Y-%m-%d")
+            end = datetime.datetime.strptime(queryform.end.data, "%Y-%m-%d").strftime("%Y-%m-%d")
             period = queryform.period.data
             selection = queryform.selection.data
             fund = float(queryform.fund.data)
@@ -116,17 +117,13 @@ def index():
                     if conn:
                         conn.close()
                 if len(rs) > 0:
-                    btrecords = []
-                    btrecords, error_str, rscode = backtest(selection, stockid, start, end, period, fund)
+                    summary = []
+                    images = []
+                    summary, images, error_str, rscode = backtest(selection, stockid, start, end, period, fund)
                     if rscode == 0:
-                        summary, images, error_str, ret = backtest_chart(btrecords)
-                        if ret == 0:
-                            print('images=%s'%images)
-                            return render_template('showresult.html', form=queryform, images=images, summary=summary)
-                        else:
-                            flash(error_str, 'warning')
+                        return render_template('showresult.html', form=queryform, images=images, summary=summary)
                     else:
-                        flash(error_str, 'warning')
+                        flash(error_str, 'danger')
                 else:
                     error_str = '无法查询到代码为 %s 的%s'%(stockid,selection)
                     flash(error_str, 'warning')

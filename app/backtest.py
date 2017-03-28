@@ -7,6 +7,9 @@ from math import floor, pow, fabs
 import matplotlib.pyplot as plt
 from matplotlib.dates import AutoDateLocator, DateFormatter
 from matplotlib.font_manager import FontProperties
+from matplotlib.pylab import date2num
+from matplotlib.finance import candlestick_ohlc
+import matplotlib.ticker as mticker
 
 MIN_BUY_AMOUNT = 100
 
@@ -20,8 +23,8 @@ def backtest(testtype, code, start, end, period, fund):
         String: The period of the backtest:Monthly or Yearly.
         Int: The amount of fund of investment.
     Return:
-        List: btrecords: [list_date, list_asset, list_cash, 
-                            list_holding, list_price, list_fundinvested]
+        List: summary of the test report
+        List: Imagefiles including title and the url of the file
         Int: Return code: 0 - normal
                           1 - start/end date error
     '''
@@ -35,7 +38,7 @@ def backtest(testtype, code, start, end, period, fund):
     else:
         table_name = 'fund_%s'%code
     sql_str = "SELECT name FROM sqlite_master WHERE type='table' AND name='%s'"%table_name
-    print('table_name=%s'%table_name)
+    #print('table_name=%s'%table_name)
     rs = None
     try:
         rs = conn.execute(sql_str).fetchone()
@@ -133,34 +136,39 @@ def backtest(testtype, code, start, end, period, fund):
                     #模拟往后一天
                     dt = dt + datetime.timedelta(days=1)
                     needs_recorded = False
-            #该品种没有查询到历史行情，只能定期存入现金
+            #没有查询到该品种在给定时间段内的历史行情，报错
             else:
-                while dt <= dt_end:
-                    day = dt.day
-                    month = dt.month
-                    if day == day_invest:
-                        if period == 'monthly':
-                            cash = cash + fund
-                            asset = cash
-                            totalinvestment = totalinvestment + fund
-                            list_holding.append(0)
-                            list_cash.append(cash)
-                            list_price.append(0)
-                            list_asset.append(asset)
-                            list_date.append(dt.strftime("%y-%m"))
-                            list_totalinvestment.append(totalinvestment)
-                        else:
-                            if month == month_invest:
-                                cash = cash + fund    
-                                asset = cash
-                                totalinvestment = totalinvestment + fund
-                                list_holding.append(0)
-                                list_cash.append(cash)
-                                list_price.append(0)
-                                list_asset.append(asset)
-                                list_date.append(dt.strftime("%y-%m"))
-                                list_totalinvestment.append(totalinvestment)
-                    dt = dt + datetime.timedelta(days=1)
+                # while dt <= dt_end:
+                    # day = dt.day
+                    # month = dt.month
+                    # if day == day_invest:
+                        # if period == 'monthly':
+                            # cash = cash + fund
+                            # asset = cash
+                            # totalinvestment = totalinvestment + fund
+                            # list_holding.append(0)
+                            # list_cash.append(cash)
+                            # list_price.append(0)
+                            # list_asset.append(asset)
+                            # list_date.append(dt.strftime("%y-%m"))
+                            # list_totalinvestment.append(totalinvestment)
+                        # else:
+                            # if month == month_invest:
+                                # cash = cash + fund    
+                                # asset = cash
+                                # totalinvestment = totalinvestment + fund
+                                # list_holding.append(0)
+                                # list_cash.append(cash)
+                                # list_price.append(0)
+                                # list_asset.append(asset)
+                                # list_date.append(dt.strftime("%y-%m"))
+                                # list_totalinvestment.append(totalinvestment)
+                    # dt = dt + datetime.timedelta(days=1)
+                error_str = '在给定的测试时段内，没有查询到该品种的行情数据。'
+                rscode = 3
+                summary = []
+                images = []
+                return summary, images, error_str, rscode
             #开始计算汇总测试结果
             if testtype == '股票':
                 tname = 'stock_basics'
@@ -237,94 +245,148 @@ def backtest(testtype, code, start, end, period, fund):
             summary.append(unit_data)
             unit_data = ['日化收益率(复合)', str_PnL_day]
             summary.append(unit_data)
-            btrecords = ([summary, list_date, list_asset, list_cash, 
-                        list_holding, list_price, list_totalinvestment])
             error_str = ''
             rscode = 0
-            return btrecords, error_str, rscode
-        #初始日期大于结束日期
+        #初始日期大于结束日期！
         else:
-            btrecords = []
-            error_str = '初始日期大于结束日期'
+            error_str = '初始日期必须大于结束日期'
             rscode = 1
-            return btrecords, error_str, rscode
+            summary = []
+            images = []
+            return summary, images, error_str, rscode
     else:
-        btrecords = []
         error_str = '''没有查询到该品种的数据记录，请确认输入的代码/品种是否正确\n
                     如果这是数据采集的问题，请与开发者(gzMichael:1960809@qq.com)联系，谢谢！'''
         rscode = 2
-        return btrecords, error_str, rscode
-    
-def backtest_chart(btrecords):
-    '''Draw a chart with the result of backtest.
-    Args:
-        List: btrecords: [summary, list_date, list_asset, list_cash, 
-                            list_holding, list_price, list_fundinvested]
-    Return:
-        List: image_files: ([{'image_title':title, 'image_filename':url}, 
-                            error_str, rscode])
-    '''
-    try:
-        summary, list_date, list_asset, list_cash, list_holding, list_price, list_totalinvestment = btrecords
-    except:
+        summary = []
         images = []
-        error_str = '不能读取回测结果'
-        rscode = 1
-        return images, rscode, error_str
-    else:    
-        testtype = summary[2][1]
-        code = summary[3][1]
-        name = summary[4][1]
-        basedir = os.path.abspath(os.path.dirname(__file__))
-        imagefile_dir = os.path.join(basedir, './static/')
-        z = []
-        #X轴数据过多，X轴坐标减少显示数量
-        if len(list_date) > 15:
-            t = len(list_date) // 15
-            for i in range(0,len(list_date)):
-                if i % t == 0:
-                    z.append(list_date[i])
-                else:
-                    z.append('')
-        else:
-            z = list_date
-        w = list_holding
-        y = list_asset
-        x = range(len(y))
-        y2 = list_totalinvestment
-        print('len(w)=%s, len(x)=%s, len(y)=%s, len(z)=%s'%(len(w),len(x),len(y),len(z)))
-        #font = FontProperties(fname = "c:/windows/fonts/simsun.ttc", size=12) 
-        plt.figure(figsize=(8, 6))
-        plt.plot(x,y,color='r',label=u'Total Asset')
-        plt.plot(x,y2,color='b',label=u'Cash Investment')
-        plt.legend(loc='upper left')
-        plt.xticks(x,z,rotation=40)
-        #plt.xlabel(u'Date')
-        plt.ylabel(u'Asset')
-        plt.title(u'Investment Income of %s'%code)
-        imagefiles = []
-        dt = time.mktime(datetime.datetime.now().timetuple())
-        image_filename = str(dt) + '_1.png'
-        image_title = u'%s：%s(%s) 回测资金曲线图'%(testtype,name,code)
-        imagefiles.append({'title':image_title, 'filename':image_filename })
-        imagefile_url = imagefile_dir + image_filename
-        plt.savefig(imagefile_url)
-        #plt.show()
-        plt.figure(figsize=(8, 6))
-        plt.bar(left=x,height=w,width=0.4,align='center')
-        plt.xticks(x,z,rotation=40)
-        #plt.xlabel(u'Date')
-        plt.ylabel(u'Positions')
-        plt.title(u'Changes in positions of %s'%code)
-        image_filename = str(dt) + '_2.png'
-        image_title = u'%s：%s(%s) 持仓变化图'%(testtype,name,code)
-        imagefiles.append({'title':image_title, 'filename':image_filename })
-        imagefile_url = imagefile_dir + image_filename
-        plt.savefig(imagefile_url)
-        #plt.show()
-        error_str = ''
-        rscode = 0
-        return summary, imagefiles, error_str, rscode
+        return summary, images, error_str, rscode
+    #******************************************************************************************
+    #*****************************************开始画图*****************************************
+    #******************************************************************************************
+    imagefile_dir = os.path.join(basedir, './static/')
+    z = []
+    #X轴数据过多，X轴坐标减少显示数量
+    if len(list_date) > 10:
+        t = len(list_date) // 10
+        for i in range(0,len(list_date)):
+            if i % t == 0:
+                z.append(list_date[i])
+            else:
+                z.append('')
+    else:
+        z = list_date
+    w = list_holding
+    y = list_asset
+    x = range(len(y))
+    y2 = list_totalinvestment
+    print('len(w)=%s, len(x)=%s, len(y)=%s, len(z)=%s'%(len(w),len(x),len(y),len(z)))
+    #font = FontProperties(fname = "c:/windows/fonts/simsun.ttc", size=12) 
+    plt.figure(figsize=(8, 6))
+    plt.plot(x,y,color='r',label=u'Total Asset')
+    plt.plot(x,y2,color='b',label=u'Cash Investment')
+    plt.legend(loc='upper left', numpoints=1)
+    leg = plt.gca().get_legend()
+    ltext  = leg.get_texts()
+    plt.setp(ltext, fontsize='small')
+    plt.xticks(x,z,rotation=45)
+    #plt.xlabel(u'Date')
+    plt.ylabel(u'Asset')
+    plt.title(u'Investment Income of %s'%code)
+    imagefiles = []
+    dt = time.mktime(datetime.datetime.now().timetuple())
+    image_filename = str(dt) + '_1.png'
+    image_title = u'%s：%s(%s) 回测资金曲线图'%(testtype,name,code)
+    imagefiles.append({'title':image_title, 'filename':image_filename })
+    imagefile_url = imagefile_dir + image_filename
+    plt.savefig(imagefile_url)
+    #plt.show()
+    plt.figure(figsize=(8, 6))
+    plt.bar(left=x,height=w,width=0.4,align='center')
+    plt.xticks(x,z,rotation=45)
+    #plt.xlabel(u'Date')
+    plt.ylabel(u'Positions')
+    plt.title(u'Changes in positions of %s'%code)
+    image_filename = str(dt) + '_2.png'
+    image_title = u'%s：%s(%s) 持仓变化图'%(testtype,name,code)
+    imagefiles.append({'title':image_title, 'filename':image_filename })
+    imagefile_url = imagefile_dir + image_filename
+    plt.savefig(imagefile_url)
+    #plt.show()
+    plt.figure(figsize=(8, 6))
+    ax1 = plt.subplot2grid((1,1), (0,0),label=u'Price Chart')
+    if testtype == '股票':
+        sql_query = ("SELECT * FROM %s WHERE date>='%s' AND date<='%s' "
+                        "ORDER BY date"%(table_name,start,end)
+                        )
+        index = 0
+        result = []
+        try:
+            conn = sqlite3.connect(SQLITE_DATABASE_URI)
+            cur = conn.cursor()
+            result = cur.execute(sql_query).fetchall()
+        except sqlite3.OperationalError as error:
+            print('操作Sqlite3数据库出现错误，错误信息是：%s'%error)
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
+        x = 0
+        y = len(result)
+        ohlc = []
+        while x < y:
+            date_time = datetime.datetime.strptime(result[x][1],'%Y-%m-%d')
+            t = date2num(date_time)
+            append_me = t, result[x][2], result[x][3], result[x][4], result[x][5], result[x][6]
+            ohlc.append(append_me)
+            x+=1                
+    if testtype == '基金':
+        sql_query = ("SELECT date,cum_netvalue FROM %s WHERE date>='%s' AND date<='%s' "
+                    "ORDER BY date"%(table_name,start,end)
+                    )
+        try:
+            conn = sqlite3.connect(SQLITE_DATABASE_URI)
+            cur = conn.cursor()
+            result = cur.execute(sql_query).fetchall()
+        except sqlite3.OperationalError as error:
+            print('操作Sqlite3数据库出现错误，错误信息是：%s'%error)
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
+        x = 0
+        y = len(result)
+        ohlc = []
+        while x < y:
+            date_time = datetime.datetime.strptime(result[x][0],'%Y-%m-%d')
+            t = date2num(date_time)
+            append_me = t, result[x][1], result[x][1], result[x][1], result[x][1], 0
+            ohlc.append(append_me)
+            x+=1                       
+    candlestick_ohlc(ax1, ohlc, width=0.2, colorup='#77d879', colordown='#db3f3f')
+    for label in ax1.xaxis.get_ticklabels():
+        label.set_rotation(45)
+    ax1.xaxis.set_major_formatter(DateFormatter('%y-%m'))
+    ax1.xaxis.set_major_locator(mticker.MaxNLocator(15))
+    ax1.grid(True)
+    #plt.xlabel('Date')
+    plt.ylabel('Price')
+    if testtype == '股票':
+        str_title = u'Stock: %s'%code
+    else:
+        str_title = u'Fund: %s'%code
+    plt.title(str_title)
+    plt.legend()
+    image_filename = str(dt) + '_3.png'
+    image_title = u'%s：%s(%s) 在 %s 至 %s 的行情走势图'%(testtype,name,code,start,end)
+    imagefiles.append({'title':image_title, 'filename':image_filename })
+    imagefile_url = imagefile_dir + image_filename
+    plt.savefig(imagefile_url)
+    error_str = ''
+    rscode = 0
+    return summary, imagefiles, error_str, rscode
     
 if __name__ == '__main__':
     import os
