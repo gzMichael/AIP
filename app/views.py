@@ -3,7 +3,7 @@ import os
 import datetime
 import sqlite3
 from app import app, db, lm
-from flask import render_template, flash, redirect, session, url_for, request, g
+from flask import render_template, flash, redirect, session, url_for, request, g, jsonify
 from flask_login import UserMixin, login_user, logout_user, current_user, login_required
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, SelectField, BooleanField, PasswordField
@@ -86,6 +86,34 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/_query_stockid')
+def query_stockid():
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
+    conn = sqlite3.connect(SQLITE_DATABASE_URI)
+    selection = request.args.get('selection','股票')
+    stockid = request.args.get('stockid','')
+    print('selection=%s, stockid=%s'%(selection,stockid))
+    if selection == '股票':
+        sql_query = "SELECT code,name FROM stock_basics WHERE code LIKE '%%%s%%' LIMIT 10"%stockid
+    else:
+        sql_query = "SELECT code,name FROM fund_basics WHERE code LIKE '%%%s%%' LIMIT 10"%stockid
+    try:
+        rs = conn.execute(sql_query).fetchall()
+        if rs is not None:
+            return_str = ''
+            #print(rs)
+            for row in rs:
+                return_str += '%s %s\n'%(row[0], row[1])
+            print(return_str)
+            return jsonify(rs=return_str)
+        else:
+            return_str = "无法查询到该代码!"
+            return jsonify(rs=return_str)
+    finally:
+        if conn:
+            conn.close()
+    
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def index():
