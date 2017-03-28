@@ -309,7 +309,7 @@ def backtest(testtype, code, start, end, period, fund):
     dt = time.mktime(datetime.datetime.now().timetuple())
     image_filename = str(dt) + '_1.png'
     image_title = u'%s：%s(%s) 回测资金曲线图'%(testtype,name,code)
-    imagefiles.append({'title':image_title, 'filename':image_filename })
+    imagefiles.append({'title':image_title, 'filename':imagefile_dir + image_filename })
     imagefile_url = imagefile_dir + image_filename
     plt.savefig(imagefile_url)
     #plt.show()
@@ -329,7 +329,7 @@ def backtest(testtype, code, start, end, period, fund):
     plt.grid(True)
     image_filename = str(dt) + '_2.png'
     image_title = u'%s：%s(%s) 盈亏曲线图'%(testtype,name,code)
-    imagefiles.append({'title':image_title, 'filename':image_filename })
+    imagefiles.append({'title':image_title, 'filename':imagefile_dir + image_filename })
     imagefile_url = imagefile_dir + image_filename
     plt.savefig(imagefile_url)
     #*****************************************图3：持仓曲线图*****************************************
@@ -342,7 +342,7 @@ def backtest(testtype, code, start, end, period, fund):
     plt.grid(True)
     image_filename = str(dt) + '_3.png'
     image_title = u'%s：%s(%s) 持仓变化图'%(testtype,name,code)
-    imagefiles.append({'title':image_title, 'filename':image_filename })
+    imagefiles.append({'title':image_title, 'filename':imagefile_dir + image_filename })
     imagefile_url = imagefile_dir + image_filename
     plt.savefig(imagefile_url)
     #plt.show()
@@ -415,7 +415,7 @@ def backtest(testtype, code, start, end, period, fund):
     plt.legend()
     image_filename = str(dt) + '_4.png'
     image_title = u'%s：%s(%s) 在 %s 至 %s 的行情走势图'%(testtype,name,code,start,end)
-    imagefiles.append({'title':image_title, 'filename':image_filename })
+    imagefiles.append({'title':image_title, 'filename':imagefile_dir + image_filename })
     imagefile_url = imagefile_dir + image_filename
     plt.savefig(imagefile_url)
     error_str = ''
