@@ -279,21 +279,30 @@ def backtest(testtype, code, start, end, period, fund):
         z = list_date
     w = list_holding
     y = list_asset
-    x = range(len(y))
     y2 = list_totalinvestment
+    i = 0
+    j = len(y)
+    yy = []
+    yy2 = []
+    while i < j:
+        yy.append(floor(y[i]/1000))
+        yy2.append(floor(y2[i]/1000))
+        i+=1                      
+    x = range(len(y))
     print('len(w)=%s, len(x)=%s, len(y)=%s, len(z)=%s'%(len(w),len(x),len(y),len(z)))
     #font = FontProperties(fname = "c:/windows/fonts/simsun.ttc", size=12) 
     #*****************************************图1：资金曲线图*****************************************
     plt.figure(figsize=(8, 6))
-    plt.plot(x,y,color='r',label=u'Total Asset')
-    plt.plot(x,y2,color='b',label=u'Cash Investment')
+    plt.plot(x,yy,color='r',label=u'Total Asset')
+    plt.plot(x,yy2,color='b',label=u'Cash Investment')
     plt.legend(loc='upper left', numpoints=1)
     leg = plt.gca().get_legend()
     ltext  = leg.get_texts()
     plt.setp(ltext, fontsize='small')
     plt.xticks(x,z,rotation=45)
+    #plt.yticks(y,y2)
     #plt.xlabel(u'Date')
-    plt.ylabel(u'Asset')
+    plt.ylabel(u'Asset(K)')
     plt.title(u'Investment Income of %s'%code)
     plt.grid(True)
     imagefiles = []
@@ -310,13 +319,12 @@ def backtest(testtype, code, start, end, period, fund):
     j = len(list_totalinvestment)
     y = []
     while i < j:
-        append_me = list_asset[i] - list_totalinvestment[i]
-        y.append(append_me)
+        y.append((list_asset[i] - list_totalinvestment[i])/1000)
         i+=1                      
     plt.plot(x,y,color='r',label=u'Profit And Loss Chart')
     plt.xticks(x,z,rotation=45)
     #plt.xlabel(u'Date')
-    plt.ylabel(u'Profit')
+    plt.ylabel(u'Profit(K)')
     plt.title(u'Profit and Lost Chart of %s'%code)
     plt.grid(True)
     image_filename = str(dt) + '_2.png'
