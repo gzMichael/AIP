@@ -173,7 +173,7 @@ def backtest(testtype, code, start, end, period, fund):
             if stockname:
                 name = stockname[0]
             PnL = list_asset[len(list_asset)-1] - list_totalinvestment[len(list_totalinvestment)-1]
-            str_PnL = str("%.1f"%PnL)
+            str_PnL = str("%.2f"%PnL)
             PnL_percent = PnL / list_totalinvestment[len(list_totalinvestment)-1]
             str_PnL_percent = str("%.1f"%(PnL_percent*100)) + '%'
             yearcount = dt_end.year - dt_start.year + 1
@@ -212,11 +212,11 @@ def backtest(testtype, code, start, end, period, fund):
                 str_investtimes = monthcount // 12
             unit_data = ['定投周期', str_period]
             summary.append(unit_data)
-            unit_data = ['每周期定投金额', str('%.1f'%fund)]
+            unit_data = ['每周期定投金额', str('%.2f'%fund)]
             summary.append(unit_data)
             unit_data = ['投入期数', str_investtimes]
             summary.append(unit_data)
-            unit_data = ['累计投入金额', totalinvestment]
+            unit_data = ['累计投入金额', str("%.2f"%totalinvestment)]
             summary.append(unit_data)
             unit_data = ['期末账户金额', str('%.2f'%asset)]
             summary.append(unit_data)

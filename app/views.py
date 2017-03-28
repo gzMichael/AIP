@@ -35,7 +35,11 @@ def check_date_input(form, field):
             dt = datetime.datetime.strptime(field.data, "%Y-%m-%d")
         except:
             raise ValidationError('正确的日期格式为：YYYY-mm-dd')
-
+        else:
+            dt_today = datetime.datetime.now()
+            if dt > dt_today:
+                raise ValidationError('结束日期不能在今天之后！')
+            
 def check_fund_input(self, field):
         if field.data:
             try:
