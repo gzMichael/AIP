@@ -348,8 +348,9 @@ def backtest(testtype, code, start, end, period, fund):
     #plt.show()
     #*****************************************图4：行情走势图*****************************************
     plt.figure(figsize=(8, 6))
-    ax1 = plt.subplot2grid((1,1), (0,0),label=u'Price Chart')
+    #股票类型，画K线图
     if testtype == '股票':
+        ax1 = plt.subplot2grid((1,1), (0,0),label=u'Price Chart')
         sql_query = ("SELECT * FROM %s WHERE date>='%s' AND date<='%s' "
                         "ORDER BY date"%(table_name,start,end)
                         )
@@ -374,7 +375,19 @@ def backtest(testtype, code, start, end, period, fund):
             t = date2num(date_time)
             append_me = t, result[i][2], result[i][3], result[i][4], result[i][5], result[i][6]
             ohlc.append(append_me)
-            i+=1                
+            i+=1
+        candlestick_ohlc(ax1, ohlc, width=0.2, colorup='#77d879', colordown='#db3f3f')
+        for label in ax1.xaxis.get_ticklabels():
+            label.set_rotation(45)
+        ax1.xaxis.set_major_formatter(DateFormatter('%y-%m'))
+        ax1.xaxis.set_major_locator(mticker.MaxNLocator(15))
+        ax1.grid(True)
+        #plt.xlabel('Date')
+        plt.ylabel('Price')
+        str_title = u'Stock: %s'%code
+        plt.title(str_title)
+        plt.legend()
+    #基金类型，画折线图  
     if testtype == '基金':
         sql_query = ("SELECT date,cum_netvalue FROM %s WHERE date>='%s' AND date<='%s' "
                     "ORDER BY date"%(table_name,start,end)
@@ -392,27 +405,28 @@ def backtest(testtype, code, start, end, period, fund):
                 conn.close()
         i = 0
         j = len(result)
-        ohlc = []
+        x = range(len(result))
+        z = []
+        y = []
+        t = len(x) // 10
         while i < j:
-            date_time = datetime.datetime.strptime(result[i][0],'%Y-%m-%d')
-            t = date2num(date_time)
-            append_me = t, float(result[i][1]),float(result[i][1]), float(result[i][1]), float(result[i][1]), 0
-            ohlc.append(append_me)
-            i+=1                       
-    candlestick_ohlc(ax1, ohlc, width=0.2, colorup='#77d879', colordown='#db3f3f')
-    for label in ax1.xaxis.get_ticklabels():
-        label.set_rotation(45)
-    ax1.xaxis.set_major_formatter(DateFormatter('%y-%m'))
-    ax1.xaxis.set_major_locator(mticker.MaxNLocator(15))
-    ax1.grid(True)
-    #plt.xlabel('Date')
-    plt.ylabel('Price')
-    if testtype == '股票':
-        str_title = u'Stock: %s'%code
-    else:
+            dt = datetime.datetime.strptime(result[i][0], "%Y-%m-%d").strftime("%y-%m")
+            if len(x) > 10:
+                if i % t == 0:
+                    z.append(dt)
+                else:    
+                    z.append('')
+            else:
+                z.append(result[i][0])
+            y.append(float(result[i][1]))
+            i+=1
+        plt.plot(x,y,color='r',label=u'Fund: %s'%code)
+        plt.xticks(x,z,rotation=45)
+        #plt.xlabel(u'Date')
+        plt.ylabel(u'Price')
+        plt.title(u'Fund: %s'%code)
+        plt.grid(False)
         str_title = u'Fund: %s'%code
-    plt.title(str_title)
-    plt.legend()
     image_filename = str(dt) + '_4.png'
     image_title = u'%s：%s(%s) 在 %s 至 %s 的行情走势图'%(testtype,name,code,start,end)
     imagefiles.append({'title':image_title, 'filename':image_filename })
