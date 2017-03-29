@@ -396,7 +396,7 @@ def backtest(testtype, code, start, end, period, fund):
         while i < j:
             date_time = datetime.datetime.strptime(result[i][0],'%Y-%m-%d')
             t = date2num(date_time)
-            append_me = t, result[i][1], result[i][1], result[i][1], result[i][1], 0
+            append_me = t, float(result[i][1]),float(result[i][1]), float(result[i][1]), float(result[i][1]), 0
             ohlc.append(append_me)
             i+=1                       
     candlestick_ohlc(ax1, ohlc, width=0.2, colorup='#77d879', colordown='#db3f3f')
