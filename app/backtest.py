@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-import tushare as ts
+# import tushare as ts
 import sqlite3
 import time, datetime
 from math import floor, pow, fabs
