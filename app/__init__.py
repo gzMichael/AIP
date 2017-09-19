@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from sqlalchemy import create_engine
 from config import SQLALCHEMY_DATABASE_URI
-import tushare as ts
 from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
