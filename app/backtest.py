@@ -4,6 +4,9 @@ import os
 import sqlite3
 import time, datetime
 from math import floor, pow, fabs
+import matplotlib as mpl
+mpl.use('Agg')
+
 import matplotlib.pyplot as plt
 from matplotlib.dates import AutoDateLocator, DateFormatter
 from matplotlib.font_manager import FontProperties
