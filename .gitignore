@@ -1,0 +1,5 @@
+/app/static/tmp_pic/*.png
+/app/static/*.png
+/stock.sqlite
+/__pycache__
+/app/__pycache__

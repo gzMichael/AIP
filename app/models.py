@@ -3,7 +3,8 @@ from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, AnonymousUserMixin
 
-#用户表
+
+# 用户表
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -24,34 +25,38 @@ class User(UserMixin, db.Model):
     def __init__(self, username, password):
         self.username = username
         self.password = password
-    
+
     def is_authenticated(self):
-            return True
+        return True
 
     def is_active():
         return True
 
     def is_anonymous(self):
-            return False
+        return False
 
     def get_id(self):
-        return unicode(self.id)  
+        return unicode(self.id)
 
     def __repr__(self):
         return '<User %r>' % self.username
 
-#用户回测记录表，未完成        
+# 用户回测记录表，未完成
+
+
 class UserHistory(db.Model):
     __tablename__ = 'user_history'
     id = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.Integer)
     stockid = db.Column(db.String(64))
     date = db.Column(db.String(64))
-    
-    def __repr__(self):
-        return '%s(%r %r %r)' %(self.__class__.__name__, self.userid, self.date, self.stockid)
 
-#股票历史行情
+    def __repr__(self):
+        return '%s(%r %r %r)' % (self.__class__.__name__, self.userid, self.date, self.stockid)
+
+# 股票历史行情
+
+
 class StockHistory(db.Model):
     __tablename__ = 'stock_history'
     id = db.Column(db.Integer, primary_key=True)
@@ -62,9 +67,9 @@ class StockHistory(db.Model):
     low = db.Column(db.Float)
     volume = db.Column(db.Float)
     code = db.Column(db.String(20))
-    
+
     def __init__(self):
         pass
 
     def __repr__(self):
-        return '%s(%r %r %r)' %(self.__class__.__name__, self.code, self.date, self.close)
+        return '%s(%r %r %r)' % (self.__class__.__name__, self.code, self.date, self.close)

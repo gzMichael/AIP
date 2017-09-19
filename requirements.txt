@@ -1,0 +1,12 @@
+blueprint==3.4.2
+gunicorn==19.6.0
+Flask==0.11.1
+Jinja2==2.8
+Flask-Bootstrap==3.3.7.1
+Flask-SQLAlchemy==2.1
+Flask-WTF==0.14.2
+requests==2.11.1
+tushare==0.6.9
+WTForms==2.1
+gunicorn==19.6.0
+psycopg2==2.6.1

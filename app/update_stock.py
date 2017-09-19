@@ -6,7 +6,7 @@
 版本：V1.0
 作者：gzMichael
 '''
-    
+
 import os
 import tushare as ts
 import sqlite3
@@ -19,7 +19,7 @@ def update_stock_data():
     '''Update all stock history records to the present day.
        Stock list table: 'stock_basics'
        Single stock history table: 'stock_xxxxxx'
-    Args: 
+    Args:
         None
     Return: 
         None
@@ -61,26 +61,22 @@ def update_stock_data():
                 try:
                     rs = conn.execute(sql_query_date).fetchone()
                 except sqlite3.OperationalError:
-                    df2 = ts.get_k_data('%s'%table_name)
+                    df2 = ts.get_k_data('%s'%i)
                     print('无法查询表%s内容，重新加载历史记录。更新 %s 条记录'%(table_name,len(df2)))
                     df2.to_sql(table_name, conn, flavor='sqlite', if_exists='replace')
-                else:    
+                else:
                     if rs is None:
-                        cur.execute('DROP TABLE IF EXISTS %s'%table_name)
-                        #表格没有数据，从最早日期开始查询
+                        cur.execute('DROP TABLE IF EXISTS %s' % table_name)
                         dt1_str = '1990-01-01'
-                    else:    
+                    else:
                         lastdate_str = rs[0]
                         dt1 = datetime.datetime.strptime(lastdate_str, "%Y-%m-%d")
                         dt1 = dt1 + datetime.timedelta(days=1)
                         dt1_str = dt1.strftime("%Y-%m-%d")
-                    #补充最后一条数据到今天的记录
                     df2 = ts.get_k_data(i, start=dt1_str, end=dtstr)
                     if len(df2) > 0:
-                        for i in range(0,len(df2)):
+                        for i in range(0, len(df2)):
                             object = df2.values[i]
-                            #print('object=%s'%object)
-                            #df2.to_sql(table_name, conn, flavor='sqlite', if_exists='replace')
                             value_str = ''
                             for i in range(0,len(object)):
                                 value_str = value_str + str(object[i])
@@ -90,7 +86,7 @@ def update_stock_data():
                         try:
                             conn.execute(sql_insert)
                             conn.commit()
-                            print('更新了从%s 到%s 的日线记录：共%s条记录已更新.'%(dt1_str,dtstr,len(df2)))
+                            print('更新了从%s 到%s 的日线记录：共%s条记录已更新.' % (dt1_str,dtstr,len(df2)))
                         except sqlite3.OperationalError as error:
                             print('更新数据库错误：无法插入数据，回滚该次数据库操作。错误信息是：%s'%error)
                             conn.rollback()
@@ -101,7 +97,7 @@ def update_stock_data():
                         if len(df3) == len(rs2):
                             print('没有查询到需更新的数据。')
                         else:
-                            print('表格%s的日线有缺失，需要重新下载%s条数据。'%(i, len(df3)))
+                            print('表格%s的日线有缺失，需要重新下载%s条数据。' % (i, len(df3)))
                             df3.to_sql(table_name, conn, flavor='sqlite', if_exists='replace')
                 finally:
                     if cur:
@@ -109,21 +105,22 @@ def update_stock_data():
                     if conn:
                         conn.close()
         else:
-            print('%s:表%s不存在，现在下载%s的全部日线数据...'%(progress_str, table_name, i))
+            print('%s:表%s不存在，现在下载%s的全部日线数据...' % (progress_str, table_name, i))
             df2 = ts.get_k_data(i,start='1990-01-01',end=dtstr)
             conn = sqlite3.connect(SQLITE_DATABASE_URI)
             try:
                 df2.to_sql(table_name, conn, index=True)
             except:
-                    print('查询数据库出错，无法查询表%s内容。'%table_name)
+                    print('查询数据库出错，无法查询表%s内容。' % table_name)
             else:
-                print('%s条数据已更新。'%len(df2))
+                print('%s条数据已更新。' % len(df2))
             finally:
                 if conn:
                     conn.close()
         rowcount = rowcount + 1
     return
-            
+
+
 if __name__ == '__main__':
     # basedir = os.path.abspath(os.path.dirname(__file__))
     # SQLITE_DATABASE_URI = os.path.join(basedir, '../stock.sqlite')
